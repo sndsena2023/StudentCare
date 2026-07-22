@@ -12,7 +12,9 @@
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
         .container { width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(106, 27, 154, 0.1); text-align: center; animation: slideUpFade 0.5s ease forwards; box-sizing: border-box; }
         
-        .login-icon { font-size: 50px; margin-bottom: 10px; }
+        /* สไตล์สำหรับโลโก้โรงเรียน */
+        .school-logo { width: 120px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
+        
         .form-label { text-align: left; font-size: 14px; font-weight: 600; color: #555; margin-bottom: 5px; display: block;}
         input[type="text"], input[type="password"] { width: 100%; padding: 15px; border-radius: 14px; border: 2px solid #EEEEEE; font-size: 16px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s; margin-bottom: 15px; letter-spacing: 1px; text-align: center;}
         input:focus { border-color: var(--primary-purple); background-color: #FAFAFA; }
@@ -37,12 +39,14 @@
 <body>
 <div class="container">
     
+    <!-- หน้าต่าง Login -->
     <div id="login-section">
-        <div class="login-icon">🔐</div>
+        <!-- เปลี่ยนอีโมจิกุญแจ เป็นโลโก้โรงเรียน -->
+        <img src="logo.png" alt="โลโก้โรงเรียนเสนาบดี" class="school-logo">
+        
         <h2>เข้าสู่ระบบสำหรับครู</h2>
         <p class="subtitle">ระบบบันทึกสุขภาพและการดื่มนม</p>
         
-        <!-- แก้ไขข้อความระบุให้ชัดเจนว่าใช้รหัสประจำตัว -->
         <label class="form-label">รหัสประจำตัวอาจารย์:</label>
         <input type="text" id="usernameInput" placeholder="เช่น T001">
         
@@ -53,8 +57,11 @@
         <div id="login-error" style="color: #E53935; font-size: 14px; margin-top: 15px; display: none;"></div>
     </div>
 
+    <!-- หน้าต่างบังคับเปลี่ยนรหัสผ่าน -->
     <div id="change-pwd-section" style="display: none;">
-        <div class="login-icon">🛡️</div>
+        <!-- ใช้โลโก้โรงเรียนในหน้าเปลี่ยนรหัสด้วยเพื่อความสวยงาม -->
+        <img src="logo.png" alt="โลโก้โรงเรียนเสนาบดี" class="school-logo">
+        
         <h2>เปลี่ยนรหัสผ่านครั้งแรก</h2>
         <p class="subtitle" style="color: #E65100;">เพื่อความปลอดภัย กรุณาตั้งรหัสผ่านใหม่</p>
         
@@ -65,6 +72,7 @@
         <div id="pwd-error" style="color: #E53935; font-size: 14px; margin-top: 15px; display: none;"></div>
     </div>
 
+    <!-- หน้าหลัก (Dashboard) -->
     <div id="dashboard-section" style="display: none;">
         <div id="greeting">✨ สวัสดี</div>
         <h2>ระบบจัดการชั้นเรียน</h2>
