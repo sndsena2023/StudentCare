@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ส่วนผู้ดูแลระบบ (Admin)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-purple: #6A1B9A; --primary-green: #2E7D32; --bg-color: #F8F9FA; --text-dark: #333333; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-color); color: var(--text-dark); margin: 0; padding: 30px 15px; }
+        .container { max-width: 650px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .nav-link { display: inline-block; margin-bottom: 25px; text-decoration: none; color: var(--primary-purple); font-weight: 600; background: #F3E5F5; padding: 8px 16px; border-radius: 20px; transition: 0.3s;}
+        .nav-link:hover { background: var(--primary-purple); color: white; }
+        h2 { text-align: center; color: var(--text-dark); margin-top: 0; font-size: 24px;}
+        p.subtitle { text-align: center; color: #888; margin-bottom: 35px; font-size: 15px;}
+        .card { border: 1px solid #EBEBEB; border-radius: 16px; padding: 25px; margin-bottom: 25px; transition: 0.3s; }
+        .card h4 { margin-top: 0; color: var(--primary-purple); font-size: 18px; margin-bottom: 15px;}
+        .paste-area { width: 100%; height: 100px; padding: 15px; box-sizing: border-box; border: 2px dashed #CCCCCC; border-radius: 12px; margin-bottom: 15px; font-family: 'Sarabun', sans-serif; font-size: 14px; background: #FAFAFA; outline: none; resize: vertical; }
+        .paste-area:focus { border-color: var(--primary-purple); background: white; }
+        button { font-family: 'Sarabun', sans-serif; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; background-color: var(--primary-green); color: white; }
+        button:hover { background-color: #1B5E20; transform: translateY(-2px); }
+        .status-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <a href="index.html" class="nav-link">← กลับหน้าหลัก</a>
+    <h2>⚙️ ตั้งค่าฐานข้อมูล (Admin)</h2>
+    <p class="subtitle">คัดลอกข้อมูลจาก Excel (รวมหัวคอลัมน์) มาวางในช่องด้านล่างเพื่อบันทึกลง Cloud</p>
+    
+    <div class="card">
+        <h4>👨‍🏫 1. ฐานข้อมูลครูประจำชั้น (ระบบจะตั้งรหัสผ่านเริ่มต้น 0000 ให้อัตโนมัติ)</h4>
+        <!-- แก้ไขคำแนะนำตรง placeholder ให้สอดคล้องกับการใช้รหัส -->
+        <textarea id="teacherData" class="paste-area" placeholder="วางข้อมูลที่นี่... (เช่น รหัสประจำตัว | ชื่อ-สกุล | ชั้นเรียน)"></textarea>
+        <button onclick="importData('teacher')">บันทึกข้อมูลครู</button>
+        <div id="status-teacher" class="status-msg"></div>
+    </div>
+
+    <div class="card">
+        <h4>👦👧 2. ฐานข้อมูลนักเรียน (ทั้งหมด)</h4>
+        <textarea id="studentData" class="paste-area" placeholder="วางข้อมูลที่นี่... (เช่น เลขที่ | ชื่อ-สกุล | เพศ | วันเกิด | ชั้นเรียน)"></textarea>
+        <button onclick="importData('student')">บันทึกข้อมูลนักเรียน</button>
+        <div id="status-student" class="status-msg"></div>
+    </div>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script src="admin.js"></script>
+</body>
+</html>

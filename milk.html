@@ -1,0 +1,210 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>บันทึกการดื่มนม</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-purple: #6A1B9A; --primary-green: #2E7D32; --border-color: #EEEEEE; }
+        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #F3E5F5 0%, #E8F5E9 100%); padding: 15px; margin: 0; min-height: 100vh;}
+        .container { max-width: 1200px; margin: auto; background: rgba(255, 255, 255, 0.98); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(106, 27, 154, 0.08); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
+        .header h2 { margin: 0; color: var(--primary-purple); font-weight: 700; font-size: 22px;}
+        .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555;}
+        select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s; }
+        select:focus, input:focus { border-color: var(--primary-purple); }
+        button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        button:active { transform: scale(0.96); }
+        .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
+        .btn-action-group { display: flex; gap: 10px; grid-column: 1 / -1; margin-top: 5px;}
+        .btn-check-all { background: #F3E5F5; color: var(--primary-purple); flex: 1; }
+        .btn-clear { background: #FFEBEE; color: #D32F2F; flex: 1; }
+        .btn-export { background: var(--primary-green); color: white; width: 100%; margin-top: 20px; padding: 16px; font-size: 18px; }
+        .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; }
+        table { border-collapse: separate; border-spacing: 0; width: 100%; min-width: 1000px; }
+        th, td { padding: 12px 5px; text-align: center; font-size: 14px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
+        th { background-color: var(--primary-purple); color: white; }
+        th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: #ffffff; z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.05); text-align: left; min-width: 150px; }
+        th:nth-child(2) { background-color: var(--primary-purple); color: white; z-index: 3;}
+        input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary-green); }
+        
+        /* สไตล์ช่องทึบสำหรับวันเสาร์-อาทิตย์ */
+        .weekend-cell { background-color: #E0E0E0; cursor: not-allowed; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>🥛 บันทึกดื่มนม ชั้น <span id="displayClass" style="color:var(--primary-green);"></span></h2>
+        <button class="btn-back" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
+    </div>
+    <div class="settings-card">
+        <!-- เมื่อเลือกเดือนหรือปี ระบบจะสร้างตารางวันหยุดใหม่ทันที -->
+        <div class="form-group">
+            <label>เดือน</label>
+            <select id="monthSelect" onchange="renderTable()">
+                <option value="พฤษภาคม">พฤษภาคม</option>
+                <option value="มิถุนายน">มิถุนายน</option>
+                <option value="กรกฎาคม">กรกฎาคม</option>
+                <option value="สิงหาคม">สิงหาคม</option>
+                <option value="กันยายน">กันยายน</option>
+                <option value="ตุลาคม">ตุลาคม</option>
+                <option value="พฤศจิกายน">พฤศจิกายน</option>
+                <option value="ธันวาคม">ธันวาคม</option>
+                <option value="มกราคม">มกราคม</option>
+                <option value="กุมภาพันธ์">กุมภาพันธ์</option>
+                <option value="มีนาคม">มีนาคม</option>
+            </select>
+        </div>
+        <div class="form-group"><label>ภาคเรียนที่</label><input type="number" id="termInput" value="1"></div>
+        <div class="form-group"><label>ปีการศึกษา (พ.ศ.)</label><input type="number" id="yearInput" value="2567" onchange="renderTable()"></div>
+        <div class="btn-action-group">
+            <button class="btn-check-all" onclick="toggleAllCheckboxes(true)">✔️ ดื่มครบทุกคน (เฉพาะ จ.-ศ.)</button>
+            <button class="btn-clear" onclick="toggleAllCheckboxes(false)">✖️ ล้างข้อมูล</button>
+        </div>
+    </div>
+    <div class="table-wrapper">
+        <table id="milkTable">
+            <thead>
+                <tr id="tableHeader">
+                    <!-- หัวตารางจะถูกสร้างจาก Javascript -->
+                </tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <button class="btn-export" onclick="exportToExcel()">💾 บันทึกและดาวน์โหลดไฟล์ Excel</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script>
+    let currentStudents = [];
+    const className = sessionStorage.getItem("currentClass");
+
+    // ดัชนีเดือนสำหรับคำนวณปฏิทิน
+    const thaiMonths = {
+        "มกราคม": 0, "กุมภาพันธ์": 1, "มีนาคม": 2, "เมษายน": 3, "พฤษภาคม": 4, "มิถุนายน": 5,
+        "กรกฎาคม": 6, "สิงหาคม": 7, "กันยายน": 8, "ตุลาคม": 9, "พฤศจิกายน": 10, "ธันวาคม": 11
+    };
+
+    window.onload = async () => {
+        if (!className) return window.location.href = "index.html";
+        document.getElementById("displayClass").innerText = className;
+        
+        try {
+            const snapshot = await db.collection('Students').get();
+            const allStudents = [];
+            snapshot.forEach(doc => allStudents.push(doc.data()));
+
+            let classKey = "ชั้นเรียน";
+            if(allStudents.length > 0){
+                const foundKey = Object.keys(allStudents[0]).find(k => k.includes("ชั้น") || k.includes("ห้อง"));
+                if(foundKey) classKey = foundKey;
+            }
+            
+            currentStudents = allStudents.filter(std => std[classKey] === className);
+            if (currentStudents.length === 0) {
+                document.getElementById("tableBody").innerHTML = "<tr><td colspan='34' style='color:#D32F2F; padding: 20px;'>⚠️ ไม่พบรายชื่อนักเรียนในห้องนี้</td></tr>";
+                return;
+            }
+            renderTable();
+            
+        } catch (error) {
+            console.error("ดึงข้อมูลนักเรียนล้มเหลว:", error);
+            alert("เกิดข้อผิดพลาดในการดึงข้อมูลนักเรียน");
+        }
+    };
+
+    function renderTable() {
+        const monthName = document.getElementById("monthSelect").value;
+        const beYear = parseInt(document.getElementById("yearInput").value);
+        
+        // แปลงปี พ.ศ. เป็น ค.ศ. สำหรับฟังก์ชัน Date() ของระบบ
+        const adYear = beYear > 2400 ? beYear - 543 : beYear;
+        const monthIndex = thaiMonths[monthName];
+
+        const thead = document.getElementById("tableHeader");
+        const tbody = document.getElementById("tableBody");
+        
+        // 1. สร้างหัวตารางใหม่เสมอ
+        thead.innerHTML = `
+            <th style="width: 40px; border-top-left-radius: 12px;">ที่</th>
+            <th>ชื่อ - สกุล</th>
+            <th style="min-width: 80px;">วันเกิด</th>
+        `;
+        for (let i = 1; i <= 31; i++) {
+            const th = document.createElement("th"); th.innerText = i;
+            if(i === 31) th.style.borderTopRightRadius = "12px";
+            thead.appendChild(th);
+        }
+
+        // 2. สร้างข้อมูลนักเรียนและตรวจสอบวันหยุด
+        tbody.innerHTML = "";
+        currentStudents.forEach((student, index) => {
+            const tr = document.createElement("tr");
+            tr.innerHTML += `<td>${index + 1}</td>`;
+            tr.innerHTML += `<td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || student['ชื่อ'] || "-"}</b></td>`;
+            tr.innerHTML += `<td>${student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "-"}</td>`;
+            
+            for (let i = 1; i <= 31; i++) {
+                // เช็คว่าเป็นวันที่จริงหรือไม่ (เช่น เดือน ก.พ. มี 28 วัน วันที่ 29-31 จะถือว่าเป็นโมฆะ)
+                let testDate = new Date(adYear, monthIndex, i);
+                let isValidDay = testDate.getMonth() === monthIndex;
+                let dayOfWeek = testDate.getDay(); // 0 = วันอาทิตย์, 6 = วันเสาร์
+
+                // ถ้าเป็นวันเสาร์(6) วันอาทิตย์(0) หรือ เป็นวันที่เกินมาจากเดือนที่มีแค่ 30 วัน -> ทำช่องทึบ
+                if (!isValidDay || dayOfWeek === 0 || dayOfWeek === 6) {
+                    tr.innerHTML += `<td class="weekend-cell"></td>`;
+                } else {
+                    tr.innerHTML += `<td><input type="checkbox" id="cb_${index}_${i}"></td>`;
+                }
+            }
+            tbody.appendChild(tr);
+        });
+    }
+
+    // ฟังก์ชันติ๊กเครื่องหมายถูกทั้งหมด (จะติ๊กเฉพาะช่องที่มี Checkbox = จันทร์ถึงศุกร์ เท่านั้น)
+    function toggleAllCheckboxes(status) { 
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = status); 
+    }
+
+    function exportToExcel() {
+        const month = document.getElementById("monthSelect").value;
+        const term = document.getElementById("termInput").value;
+        const year = document.getElementById("yearInput").value;
+        
+        let exportData = [["แบบฟอร์มบันทึกข้อมูลการดื่มนม"], [`ประจำเดือน ${month}`, "", `โรงเรียน เสนาบดี`, "", `ภาคเรียนที่ ${term}`, "", `ปีการศึกษา ${year}`, "", `ชั้น ${className}`]];
+        let headers = ["ลำดับที่", "ชื่อ-สกุล", "วัน/เดือน/ปี เกิด"];
+        for (let i = 1; i <= 31; i++) headers.push(i);
+        exportData.push(headers);
+
+        currentStudents.forEach((student, index) => {
+            let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || ""];
+            
+            for (let i = 1; i <= 31; i++) { 
+                const cb = document.getElementById(`cb_${index}_${i}`);
+                if (cb) {
+                    // ถ้ามี Checkbox ให้ดูว่าติ๊กไหม
+                    row.push(cb.checked ? "/" : ""); 
+                } else {
+                    // ถ้าเป็นช่องทึบ (เสาร์-อาทิตย์ หรือวันเกิน) ให้ปล่อยว่างไว้ใน Excel
+                    row.push(""); 
+                }
+            }
+            exportData.push(row);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(exportData);
+        ws['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 15 }];
+        for (let i = 0; i < 31; i++) ws['!cols'].push({ wch: 4 });
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
+        XLSX.writeFile(wb, `บันทึกดื่มนม_ชั้น${className.replace('/', '-')}_${month}_${year}.xlsx`);
+    }
+</script>
+</body>
+</html>

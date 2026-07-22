@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="th">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>บันทึกน้ำหนัก - ส่วนสูง</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root { --primary-purple: #6A1B9A; --primary-green: #2E7D32; --border-color: #EEEEEE; }
+        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #F3E5F5 0%, #E8F5E9 100%); margin: 0; padding: 15px; min-height: 100vh; }
+        .container { max-width: 1200px; margin: auto; background: rgba(255, 255, 255, 0.98); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
+        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
+        .header h2 { margin: 0; color: var(--primary-green); font-weight: 700; font-size: 22px;}
+        .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
+        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555; }
+        select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; }
+        button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
+        .btn-export { background: var(--primary-purple); color: white; width: 100%; margin-top: 20px; padding: 16px; font-size: 18px; display: flex; justify-content: center; gap: 10px;}
+        .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; }
+        table { border-collapse: collapse; width: 100%; min-width: 900px; }
+        th, td { padding: 10px; text-align: center; font-size: 14px; border: 1px solid var(--border-color); }
+        th { background-color: var(--primary-green); color: white; font-weight: 600; }
+        th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: #ffffff; z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.05); text-align: left; min-width: 150px; }
+        th:nth-child(2) { background-color: var(--primary-green); color: white; z-index: 3;}
+        .input-hw { width: 70px; padding: 8px; border: 2px solid #E0E0E0; border-radius: 8px; text-align: center; outline: none; font-family: 'Sarabun', sans-serif;}
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; min-width: 80px;}
+        .status-normal { background: #E8F5E9; color: #2E7D32; } .status-warning { background: #FFF3E0; color: #E65100; } .status-danger { background: #FFEBEE; color: #C62828; } .status-empty { background: #F5F5F5; color: #9E9E9E; }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h2>⚖️ บันทึกน้ำหนัก-ส่วนสูง ชั้น <span id="displayClass" style="color:var(--primary-purple);"></span></h2>
+        <button class="btn-back" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
+    </div>
+    <div class="settings-card">
+        <div class="form-group"><label>ประจำเดือน</label><input type="text" id="monthInput" value="พฤษภาคม"></div>
+        <div class="form-group"><label>ภาคเรียนที่</label><input type="number" id="termInput" value="1"></div>
+        <div class="form-group"><label>ปีการศึกษา</label><input type="number" id="yearInput" value="2567"></div>
+        <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" placeholder="ชื่อคุณครู..."></div>
+    </div>
+    <div class="table-wrapper">
+        <table id="healthTable">
+            <thead>
+                <tr>
+                    <th rowspan="2" style="width: 40px;">ที่</th><th rowspan="2">ชื่อ - สกุล</th><th rowspan="2">เพศ</th>
+                    <th colspan="2">อายุ</th><th rowspan="2">น้ำหนัก<br>(กก.)</th><th rowspan="2">ส่วนสูง<br>(ซม.)</th>
+                    <th colspan="2">สรุปภาวะโภชนาการอัตโนมัติ</th>
+                </tr>
+                <tr><th style="width: 50px;">ปี</th><th style="width: 50px;">เดือน</th><th>น้ำหนักตามเกณฑ์ส่วนสูง</th><th>ส่วนสูงตามเกณฑ์อายุ</th></tr>
+            </thead>
+            <tbody id="tableBody"></tbody>
+        </table>
+    </div>
+    <button class="btn-export" onclick="exportToExcel()">💾 บันทึกและดาวน์โหลดไฟล์ Excel</button>
+</div>
+
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
+<script src="firebase.js"></script>
+<script>
+    let currentStudents = [];
+    const className = sessionStorage.getItem("currentClass");
+
+    window.onload = async () => {
+        if (!className) return window.location.href = "index.html";
+        document.getElementById("displayClass").innerText = className;
+        
+        try {
+            const snapshot = await db.collection('Students').get();
+            const allStudents = [];
+            snapshot.forEach(doc => allStudents.push(doc.data()));
+
+            let classKey = "ชั้นเรียน";
+            if(allStudents.length > 0){
+                const foundKey = Object.keys(allStudents[0]).find(k => k.includes("ชั้น") || k.includes("ห้อง"));
+                if(foundKey) classKey = foundKey;
+            }
+            
+            currentStudents = allStudents.filter(std => std[classKey] === className);
+            if (currentStudents.length === 0) {
+                document.getElementById("tableBody").innerHTML = "<tr><td colspan='9' style='color:#D32F2F; padding: 20px;'>⚠️ ไม่พบรายชื่อนักเรียนในห้องนี้</td></tr>";
+                return;
+            }
+            
+            // นำชื่อครูที่ล็อกอินมาใส่ในช่องอัตโนมัติ
+            const loggedInUser = sessionStorage.getItem('loggedInTeacher');
+            if (loggedInUser) {
+                document.getElementById("teacherInput").value = JSON.parse(loggedInUser).name;
+            }
+            renderTable();
+            
+        } catch (error) {
+            console.error("ดึงข้อมูลนักเรียนล้มเหลว:", error);
+            alert("เกิดข้อผิดพลาดในการดึงข้อมูลนักเรียน");
+        }
+    };
+
+    function calculateAge(dobString) {
+        if (!dobString) return { y: "-", m: "-" };
+        let parts = dobString.split('/');
+        if(parts.length !== 3) return { y: "-", m: "-" };
+        let year = parseInt(parts[2]);
+        if (year > 2400) year -= 543; 
+        let dob = new Date(year, parseInt(parts[1]) - 1, parseInt(parts[0]));
+        let today = new Date();
+        let ageY = today.getFullYear() - dob.getFullYear();
+        let ageM = today.getMonth() - dob.getMonth();
+        if (ageM < 0 || (ageM === 0 && today.getDate() < dob.getDate())) { ageY--; ageM += 12; }
+        return { y: ageY, m: ageM };
+    }
+
+    function analyzeHealth(gender, weight, height) {
+        if(!weight || !height) return { wh: "รอข้อมูล", ha: "รอข้อมูล", whClass: "status-empty", haClass: "status-empty" };
+        let bmi = weight / ((height/100) * (height/100));
+        let whResult = "สมส่วน"; let whClass = "status-normal"; let haResult = "สูงตามเกณฑ์"; let haClass = "status-normal";
+        if (bmi < 15) { whResult = "ผอม"; whClass = "status-danger"; }
+        else if (bmi < 16.5) { whResult = "ค่อนข้างผอม"; whClass = "status-warning"; }
+        else if (bmi > 23) { whResult = "อ้วน"; whClass = "status-danger"; }
+        else if (bmi > 20) { whResult = "เริ่มอ้วน"; whClass = "status-warning"; }
+        if (height < 120) { haResult = "เตี้ย"; haClass = "status-danger"; } else if (height > 155) { haResult = "สูง"; haClass = "status-normal"; }
+        return { wh: whResult, ha: haResult, whClass: whClass, haClass: haClass };
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById("tableBody");
+        currentStudents.forEach((student, index) => {
+            const tr = document.createElement("tr");
+            const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
+            tr.innerHTML = `
+                <td>${index + 1}</td>
+                <td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || ""}</b></td>
+                <td>${student['เพศ'] || "-"}</td><td>${age.y}</td><td>${age.m}</td>
+                <td><input type="number" class="input-hw" id="w_${index}" step="0.1" oninput="updateNutrition(${index}, '${student['เพศ']}')"></td>
+                <td><input type="number" class="input-hw" id="h_${index}" step="0.1" oninput="updateNutrition(${index}, '${student['เพศ']}')"></td>
+                <td><span class="badge status-empty" id="badge_wh_${index}">รอข้อมูล</span></td><td><span class="badge status-empty" id="badge_ha_${index}">รอข้อมูล</span></td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    window.updateNutrition = function(index, gender) {
+        let result = analyzeHealth(gender, parseFloat(document.getElementById(`w_${index}`).value), parseFloat(document.getElementById(`h_${index}`).value));
+        document.getElementById(`badge_wh_${index}`).className = `badge ${result.whClass}`; document.getElementById(`badge_wh_${index}`).innerText = result.wh;
+        document.getElementById(`badge_ha_${index}`).className = `badge ${result.haClass}`; document.getElementById(`badge_ha_${index}`).innerText = result.ha;
+    }
+
+    function exportToExcel() {
+        const month = document.getElementById("monthInput").value;
+        const term = document.getElementById("termInput").value;
+        const year = document.getElementById("yearInput").value;
+        const teacher = document.getElementById("teacherInput").value;
+
+        let exportData = [
+            ["แบบบันทึกน้ำหนัก - ส่วนสูง", `ประจำเดือน ${month}`],
+            [`ชั้น ${className}`, `ภาคเรียนที่ ${term}`, `ปีการศึกษา ${year}`, `ครูประจำชั้น ${teacher}`],
+            [],
+            ["ลำดับที่", "ชื่อ - สกุล", "เพศ", "อายุ (ปี)", "อายุ (เดือน)", "น้ำหนัก", "ส่วนสูง", "ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน", "เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"]
+        ];
+
+        currentStudents.forEach((student, index) => {
+            const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
+            let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['เพศ'] || "", age.y, age.m, document.getElementById(`w_${index}`).value || "", document.getElementById(`h_${index}`).value || ""];
+            let whResult = document.getElementById(`badge_wh_${index}`).innerText; let haResult = document.getElementById(`badge_ha_${index}`).innerText;
+            ["ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน"].forEach(opt => row.push(whResult === opt ? "/" : ""));
+            ["เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"].forEach(opt => row.push(haResult === opt ? "/" : ""));
+            exportData.push(row);
+        });
+
+        const ws = XLSX.utils.aoa_to_sheet(exportData);
+        ws['!cols'] = [{wch: 8}, {wch: 30}, {wch: 6}, {wch: 8}, {wch: 10}, {wch: 8}, {wch: 8}];
+        for(let i=0; i<11; i++) ws['!cols'].push({wch: 10});
+        const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, `เดือน ${month}`);
+        XLSX.writeFile(wb, `บันทึกสุขภาพ_ชั้น${className.replace('/', '-')}_${month}.xlsx`);
+    }
+</script>
+</body>
+</html>
