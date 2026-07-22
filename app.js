@@ -9,8 +9,15 @@ if ('serviceWorker' in navigator) {
 
 document.addEventListener("DOMContentLoaded", () => {
     const loggedInUser = sessionStorage.getItem('loggedInTeacher');
+    
+    // เช็คว่ามีข้อมูลล็อกอินค้างไว้ไหม
     if (loggedInUser) {
         showDashboard(JSON.parse(loggedInUser));
+    } else {
+        // ถ้ายังไม่ล็อกอิน บังคับโชว์แค่หน้า Login
+        document.getElementById('login-section').style.display = 'block';
+        document.getElementById('change-pwd-section').style.display = 'none';
+        document.getElementById('dashboard-section').style.display = 'none';
     }
 });
 
@@ -19,7 +26,6 @@ async function login() {
     const passwordInput = document.getElementById('passwordInput').value.trim();
     const errorMsg = document.getElementById('login-error');
     
-    // แปลงให้เป็นตัวพิมพ์ใหญ่ทั้งหมด (T001) ป้องกันปัญหาพิมพ์เล็ก-ใหญ่ผิด
     const cleanUser = usernameInput.toUpperCase(); 
 
     if (!cleanUser || !passwordInput) {
@@ -36,11 +42,9 @@ async function login() {
 
         snapshot.forEach(doc => {
             const teacher = doc.data();
-            // ค้นหาคอลัมน์ที่มีคำว่า "รหัส"
             const idKey = Object.keys(teacher).find(k => k.includes("รหัส"));
             const dbId = idKey && teacher[idKey] ? String(teacher[idKey]).trim().toUpperCase() : "";
 
-            // ตรวจสอบว่าตรงกับที่พิมพ์มาหรือไม่
             if (dbId === cleanUser) {
                 foundDoc = { id: doc.id, data: teacher };
             }
@@ -65,7 +69,9 @@ async function login() {
                 }
 
                 if (passwordInput === "0000") {
+                    // ไปหน้าเปลี่ยนรหัสผ่าน ซ่อนหน้าอื่น
                     document.getElementById('login-section').style.display = 'none';
+                    document.getElementById('dashboard-section').style.display = 'none';
                     document.getElementById('change-pwd-section').style.display = 'block';
                 } else {
                     proceedToDashboard();
@@ -106,13 +112,17 @@ async function saveNewPassword() {
 function proceedToDashboard() {
     sessionStorage.setItem('loggedInTeacher', JSON.stringify(currentTeacherData));
     sessionStorage.setItem('currentClass', currentTeacherData.className);
-    document.getElementById('change-pwd-section').style.display = 'none';
-    document.getElementById('login-section').style.display = 'none';
     showDashboard(currentTeacherData);
 }
 
 function showDashboard(teacher) {
+    // 💡 จุดที่แก้ไข: สั่งซ่อนหน้า Login และหน้าเปลี่ยนรหัสผ่านให้ชัวร์ 100%
+    document.getElementById('login-section').style.display = 'none';
+    document.getElementById('change-pwd-section').style.display = 'none';
+    
+    // โชว์หน้า Dashboard อย่างเดียว
     document.getElementById('dashboard-section').style.display = 'block';
+
     const hour = new Date().getHours();
     let greetingText = "✨ สวัสดี";
     if (hour >= 5 && hour < 12) greetingText = "🌅 สวัสดีตอนเช้าครับ";
