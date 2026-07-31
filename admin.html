@@ -12,7 +12,7 @@
         .nav-link { display: inline-block; margin-bottom: 25px; text-decoration: none; color: var(--primary-purple); font-weight: 600; background: #F3E5F5; padding: 8px 16px; border-radius: 20px; transition: 0.3s;}
         .nav-link:hover { background: var(--primary-purple); color: white; }
         h2 { text-align: center; color: var(--text-dark); margin-top: 0; font-size: 24px;}
-        p.subtitle { text-align: center; color: #888; margin-bottom: 35px; font-size: 15px;}
+        p.subtitle { text-align: center; color: #888; margin-bottom: 25px; font-size: 15px;}
         .card { border: 1px solid #EBEBEB; border-radius: 16px; padding: 25px; margin-bottom: 25px; transition: 0.3s; }
         .card h4 { margin-top: 0; color: var(--primary-purple); font-size: 18px; margin-bottom: 15px;}
         .paste-area { width: 100%; height: 100px; padding: 15px; box-sizing: border-box; border: 2px dashed #CCCCCC; border-radius: 12px; margin-bottom: 15px; font-family: 'Sarabun', sans-serif; font-size: 14px; background: #FAFAFA; outline: none; resize: vertical; }
@@ -29,20 +29,23 @@
 <div class="container">
     <a href="index.html" class="nav-link">← กลับหน้าหลัก</a>
     <h2>⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
-    <p class="subtitle">กำหนดวันหยุด และแก้ไขฐานข้อมูลพื้นฐาน</p>
     
-    <!-- เพิ่มกล่องกำหนดปีการศึกษาสำหรับการนำเข้าข้อมูล -->
-    <div class="card" style="background: #E3F2FD; border-color: #90CAF9;">
-        <h4 style="color: #1565C0;">📌 ล็อกปีการศึกษา (สำหรับนำเข้าข้อมูล)</h4>
+    <!-- กล่องตั้งค่าเทอมและปีการศึกษาปัจจุบัน -->
+    <div class="card" style="background: #E8F5E9; border-color: #A5D6A7;">
+        <h4 style="color: #2E7D32;">📌 1. ตั้งค่า "ภาคเรียนปัจจุบัน" ของระบบ</h4>
         <div class="form-group">
-            <label style="font-weight: 600; color: #333;">ปีการศึกษา (พ.ศ.):</label>
-            <input type="number" id="importAcademicYear" value="2567" style="max-width: 200px; font-weight: bold; color: #1565C0;">
+            <label style="font-weight: 600;">ภาคเรียนที่:</label>
+            <input type="number" id="sysTerm" value="1" style="max-width: 100px; font-weight: bold; color: #2E7D32;">
+            <label style="font-weight: 600;">ปีการศึกษา (พ.ศ.):</label>
+            <input type="number" id="sysYear" value="2567" style="max-width: 150px; font-weight: bold; color: #2E7D32;">
         </div>
-        <p style="font-size: 13px; color: #555; margin: 0;">* ข้อมูลครูและนักเรียนที่นำเข้าด้านล่าง จะถูกประทับตราด้วยปีการศึกษานี้ทั้งหมด</p>
+        <button onclick="saveSystemSettings()" style="background-color: #2E7D32;">💾 บันทึกการตั้งค่าระบบ</button>
+        <div id="status-sys" class="status-msg"></div>
+        <p style="font-size: 13px; color: #555; margin-bottom: 0; margin-top: 10px;">* ข้อมูลครูและนักเรียนที่นำเข้าด้านล่าง จะถูกประทับตราด้วยเทอม/ปีนี้ และครูจะกรอกข้อมูลได้เฉพาะเทอม/ปีนี้เท่านั้น (ย้อนหลังดูได้อย่างเดียว)</p>
     </div>
 
     <div class="card">
-        <h4>🗓️ 1. กำหนดวันหยุดพิเศษ (ระบบจะบล็อกไม่ให้ครูติ๊กนม)</h4>
+        <h4>🗓️ 2. กำหนดวันหยุดพิเศษ</h4>
         <div class="form-group">
             <input type="date" id="holidayDate">
             <input type="text" id="holidayName" placeholder="ชื่อวันหยุด (เช่น วันแม่, ชดเชย)">
@@ -52,14 +55,14 @@
     </div>
 
     <div class="card">
-        <h4>👨‍🏫 2. ฐานข้อมูลครูประจำชั้น (ตั้งรหัส 0000 ให้อัตโนมัติ)</h4>
+        <h4>👨‍🏫 3. ฐานข้อมูลครูประจำชั้น (ตั้งรหัส 0000 ให้อัตโนมัติ)</h4>
         <textarea id="teacherData" class="paste-area" placeholder="วางข้อมูล... (รหัสประจำตัว | ชื่อ-สกุล | ชั้นเรียน)"></textarea>
         <button onclick="importData('teacher')">บันทึกข้อมูลครู</button>
         <div id="status-teacher" class="status-msg"></div>
     </div>
 
     <div class="card">
-        <h4>👦👧 3. ฐานข้อมูลนักเรียน</h4>
+        <h4>👦👧 4. ฐานข้อมูลนักเรียน</h4>
         <textarea id="studentData" class="paste-area" placeholder="วางข้อมูล... (เลขที่ | รหัสประจำตัว | ชื่อ-สกุล | เพศ | วันเกิด | ชั้นเรียน)"></textarea>
         <button onclick="importData('student')">บันทึกข้อมูลนักเรียน</button>
         <div id="status-student" class="status-msg"></div>
