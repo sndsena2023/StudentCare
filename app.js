@@ -14,7 +14,7 @@ document.addEventListener("DOMContentLoaded", () => {
     if (loggedInUser) {
         showDashboard(JSON.parse(loggedInUser));
     } else {
-        // ถ้ายังไม่ล็อกอิน บังคับโชว์แค่หน้า Login
+        // บังคับโชว์แค่หน้า Login
         document.getElementById('login-section').style.display = 'block';
         document.getElementById('change-pwd-section').style.display = 'none';
         document.getElementById('dashboard-section').style.display = 'none';
@@ -26,6 +26,7 @@ async function login() {
     const passwordInput = document.getElementById('passwordInput').value.trim();
     const errorMsg = document.getElementById('login-error');
     
+    // แปลงเป็นตัวพิมพ์ใหญ่ทั้งหมด ป้องกันปัญหาครูพิมพ์ตัวพิมพ์เล็ก (t001)
     const cleanUser = usernameInput.toUpperCase(); 
 
     if (!cleanUser || !passwordInput) {
@@ -69,7 +70,7 @@ async function login() {
                 }
 
                 if (passwordInput === "0000") {
-                    // ไปหน้าเปลี่ยนรหัสผ่าน ซ่อนหน้าอื่น
+                    // ไปหน้าเปลี่ยนรหัสผ่าน สั่งซ่อนหน้าอื่นให้หมด
                     document.getElementById('login-section').style.display = 'none';
                     document.getElementById('dashboard-section').style.display = 'none';
                     document.getElementById('change-pwd-section').style.display = 'block';
@@ -116,11 +117,11 @@ function proceedToDashboard() {
 }
 
 function showDashboard(teacher) {
-    // 💡 จุดที่แก้ไข: สั่งซ่อนหน้า Login และหน้าเปลี่ยนรหัสผ่านให้ชัวร์ 100%
+    // สั่งซ่อนหน้า Login และหน้าเปลี่ยนรหัสผ่านให้ชัวร์
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('change-pwd-section').style.display = 'none';
     
-    // โชว์หน้า Dashboard อย่างเดียว
+    // โชว์หน้า Dashboard 
     document.getElementById('dashboard-section').style.display = 'block';
 
     const hour = new Date().getHours();
