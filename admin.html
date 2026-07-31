@@ -21,8 +21,8 @@
         button:hover { background-color: #1B5E20; transform: translateY(-2px); }
         .status-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
         .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
-        .form-group input { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; flex: 1; min-width: 150px; outline: none;}
-        .form-group input:focus { border-color: var(--primary-purple); }
+        .form-group input, .form-group select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; flex: 1; min-width: 150px; outline: none;}
+        .form-group input:focus, .form-group select:focus { border-color: var(--primary-purple); }
     </style>
 </head>
 <body>
@@ -30,18 +30,27 @@
     <a href="index.html" class="nav-link">← กลับหน้าหลัก</a>
     <h2>⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
     
-    <!-- กล่องตั้งค่าเทอมและปีการศึกษาปัจจุบัน -->
     <div class="card" style="background: #E8F5E9; border-color: #A5D6A7;">
         <h4 style="color: #2E7D32;">📌 1. ตั้งค่า "ภาคเรียนปัจจุบัน" ของระบบ</h4>
         <div class="form-group">
             <label style="font-weight: 600;">ภาคเรียนที่:</label>
-            <input type="number" id="sysTerm" value="1" style="max-width: 100px; font-weight: bold; color: #2E7D32;">
+            <select id="sysTerm" style="max-width: 100px; font-weight: bold; color: #2E7D32;">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
             <label style="font-weight: 600;">ปีการศึกษา (พ.ศ.):</label>
-            <input type="number" id="sysYear" value="2567" style="max-width: 150px; font-weight: bold; color: #2E7D32;">
+            <select id="sysYear" style="max-width: 150px; font-weight: bold; color: #2E7D32;">
+                <option value="2566">2566</option>
+                <option value="2567" selected>2567</option>
+                <option value="2568">2568</option>
+                <option value="2569">2569</option>
+                <option value="2570">2570</option>
+            </select>
         </div>
         <button onclick="saveSystemSettings()" style="background-color: #2E7D32;">💾 บันทึกการตั้งค่าระบบ</button>
         <div id="status-sys" class="status-msg"></div>
-        <p style="font-size: 13px; color: #555; margin-bottom: 0; margin-top: 10px;">* ข้อมูลครูและนักเรียนที่นำเข้าด้านล่าง จะถูกประทับตราด้วยเทอม/ปีนี้ และครูจะกรอกข้อมูลได้เฉพาะเทอม/ปีนี้เท่านั้น (ย้อนหลังดูได้อย่างเดียว)</p>
+        <p style="font-size: 13px; color: #555; margin-bottom: 0; margin-top: 10px;">* ข้อมูลที่นำเข้าด้านล่างจะถูกประทับตราด้วยเทอม/ปีนี้</p>
     </div>
 
     <div class="card">
@@ -55,7 +64,7 @@
     </div>
 
     <div class="card">
-        <h4>👨‍🏫 3. ฐานข้อมูลครูประจำชั้น (ตั้งรหัส 0000 ให้อัตโนมัติ)</h4>
+        <h4>👨‍🏫 3. ฐานข้อมูลครูประจำชั้น</h4>
         <textarea id="teacherData" class="paste-area" placeholder="วางข้อมูล... (รหัสประจำตัว | ชื่อ-สกุล | ชั้นเรียน)"></textarea>
         <button onclick="importData('teacher')">บันทึกข้อมูลครู</button>
         <div id="status-teacher" class="status-msg"></div>
