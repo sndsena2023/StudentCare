@@ -20,7 +20,7 @@
         button { font-family: 'Sarabun', sans-serif; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; background-color: var(--primary-green); color: white; }
         button:hover { background-color: #1B5E20; transform: translateY(-2px); }
         .status-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
-        .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
+        .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
         .form-group input { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; flex: 1; min-width: 150px; outline: none;}
         .form-group input:focus { border-color: var(--primary-purple); }
     </style>
@@ -31,6 +31,16 @@
     <h2>⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
     <p class="subtitle">กำหนดวันหยุด และแก้ไขฐานข้อมูลพื้นฐาน</p>
     
+    <!-- เพิ่มกล่องกำหนดปีการศึกษาสำหรับการนำเข้าข้อมูล -->
+    <div class="card" style="background: #E3F2FD; border-color: #90CAF9;">
+        <h4 style="color: #1565C0;">📌 ล็อกปีการศึกษา (สำหรับนำเข้าข้อมูล)</h4>
+        <div class="form-group">
+            <label style="font-weight: 600; color: #333;">ปีการศึกษา (พ.ศ.):</label>
+            <input type="number" id="importAcademicYear" value="2567" style="max-width: 200px; font-weight: bold; color: #1565C0;">
+        </div>
+        <p style="font-size: 13px; color: #555; margin: 0;">* ข้อมูลครูและนักเรียนที่นำเข้าด้านล่าง จะถูกประทับตราด้วยปีการศึกษานี้ทั้งหมด</p>
+    </div>
+
     <div class="card">
         <h4>🗓️ 1. กำหนดวันหยุดพิเศษ (ระบบจะบล็อกไม่ให้ครูติ๊กนม)</h4>
         <div class="form-group">
