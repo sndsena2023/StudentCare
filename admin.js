@@ -1,10 +1,10 @@
+// ไฟล์: admin.js
+
 function parseExcelPastedData(rawData) {
     const rows = rawData.trim().split(/\r?\n/);
     if (rows.length < 2) throw new Error("ต้องมีอย่างน้อย 1 บรรทัดหัวคอลัมน์ และ 1 บรรทัดข้อมูล");
-
     const headers = rows[0].split('\t').map(header => header.trim());
     const dataList = [];
-
     for (let i = 1; i < rows.length; i++) {
         if (rows[i].trim() === "") continue;
         const columns = rows[i].split('\t');
@@ -24,41 +24,76 @@ async function importData(type) {
     
     const rawText = document.getElementById(textAreaId).value;
     const statusEl = document.getElementById(statusId);
+    
+    // ดึงค่าปีการศึกษาที่แอดมินระบุไว้
+    const academicYear = document.getElementById('importAcademicYear').value.trim();
 
-    if (!rawText.trim()) {
-        statusEl.style.color = "red"; statusEl.innerText = "❌ กรุณาวางข้อมูลก่อนกดบันทึก"; return;
+    if (!academicYear) {
+        alert("❌ กรุณาระบุปีการศึกษาด้านบนก่อนทำการนำเข้าข้อมูล");
+        document.getElementById('importAcademicYear').focus();
+        return;
+    }
+
+    if (!rawText.trim()) { 
+        statusEl.style.color = "red"; 
+        statusEl.innerText = "❌ กรุณาวางข้อมูลก่อนกดบันทึก"; 
+        return; 
     }
 
     try {
-        statusEl.style.color = "blue"; statusEl.innerText = "⏳ กำลังอัปโหลดขึ้นฐานข้อมูล Firebase...";
-        const parsedData = parseExcelPastedData(rawText);
+        statusEl.style.color = "blue"; 
+        statusEl.innerText = "⏳ กำลังอัปโหลดขึ้นฐานข้อมูล Firebase...";
         
-        if (type === 'student') {
-            if (!Object.keys(parsedData[0]).some(k => k.includes("ชั้น") || k.includes("ห้อง"))) {
-                throw new Error('ไม่พบคอลัมน์ "ชั้นเรียน" ในข้อมูลนักเรียน');
-            }
-        } else if (type === 'teacher') {
-            if (!Object.keys(parsedData[0]).some(k => k.includes("ชั้น") || k.includes("ห้อง") || k.includes("ประจำชั้น"))) {
-                throw new Error('ไม่พบคอลัมน์ "ชั้นเรียน" ของครู');
-            }
-        }
-
+        const parsedData = parseExcelPastedData(rawText);
         const batch = db.batch();
+        
         parsedData.forEach((data) => {
+            // *** ไฮไลต์: ประทับตราปีการศึกษาลงในข้อมูลทุกรายการ ***
+            data.academicYear = academicYear; 
+            
             if (type === 'teacher') {
-                data.password = "0000"; // แจกรหัสผ่านเริ่มต้นให้ครูทุกคน
+                data.password = "0000"; // ครูได้รหัส 0000 เสมอเมื่อนำเข้าใหม่
             }
+            
             const docRef = db.collection(collectionName).doc(); 
             batch.set(docRef, data);
         });
-
+        
         await batch.commit();
 
-        statusEl.style.color = "green";
-        statusEl.innerText = `✅ สำเร็จ! บันทึกข้อมูล ${parsedData.length} รายการลง Cloud เรียบร้อย`;
+        statusEl.style.color = "green"; 
+        statusEl.innerText = `✅ สำเร็จ! บันทึกข้อมูล ${parsedData.length} รายการ (ปีการศึกษา ${academicYear}) ลง Cloud เรียบร้อย`;
         document.getElementById(textAreaId).value = "";
     } catch (error) {
+        statusEl.style.color = "red"; 
+        statusEl.innerText = `❌ เกิดข้อผิดพลาด: ${error.message}`;
+    }
+}
+
+async function saveHoliday() {
+    const dateVal = document.getElementById('holidayDate').value;
+    const nameVal = document.getElementById('holidayName').value.trim();
+    const statusEl = document.getElementById('status-holiday');
+    
+    // พ่วงปีการศึกษาไปด้วยเผื่อใช้กรองวันหยุด
+    const academicYear = document.getElementById('importAcademicYear').value.trim();
+
+    if (!dateVal || !nameVal) {
+        statusEl.style.color = "red"; statusEl.innerText = "❌ กรุณาเลือกวันที่และตั้งชื่อวันหยุด"; return;
+    }
+
+    try {
+        statusEl.style.color = "blue"; statusEl.innerText = "⏳ กำลังบันทึกวันหยุด...";
+        
+        await db.collection('Holidays').doc(dateVal).set({
+            date: dateVal,
+            name: nameVal,
+            academicYear: academicYear || "2567"
+        });
+        
+        statusEl.style.color = "green"; statusEl.innerText = `✅ บันทึกวันหยุด "${nameVal}" เรียบร้อย!`;
+        document.getElementById('holidayName').value = "";
+    } catch (error) {
         statusEl.style.color = "red"; statusEl.innerText = `❌ เกิดข้อผิดพลาด: ${error.message}`;
-        console.error(error);
     }
 }
