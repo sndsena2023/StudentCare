@@ -14,7 +14,7 @@
         .header h2 { margin: 0; color: var(--primary-green); font-weight: 700; font-size: 22px;}
         .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
         .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555; }
-        select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; }
+        select, input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; }
         select:focus, input:focus { border-color: var(--primary-green); }
         button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
         .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
@@ -26,8 +26,7 @@
         th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: #ffffff; z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.05); text-align: left; min-width: 150px; }
         th:nth-child(2) { background-color: var(--primary-green); color: white; z-index: 3;}
         .input-hw { width: 70px; padding: 8px; border: 2px solid #E0E0E0; border-radius: 8px; text-align: center; outline: none; font-family: 'Sarabun', sans-serif;}
-        .input-hw:disabled { background-color: #f0f0f0; cursor: not-allowed; }
-        .readonly-banner { background: #FFF3E0; color: #E65100; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #FFB74D; text-align: center; margin-bottom: 20px; display: none; }
+        .input-hw:disabled { background-color: #f0f0f0; cursor: not-allowed; border: 1px solid #eee; }
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; min-width: 80px;}
         .status-normal { background: #E8F5E9; color: #2E7D32; } .status-warning { background: #FFF3E0; color: #E65100; } .status-danger { background: #FFEBEE; color: #C62828; } .status-empty { background: #F5F5F5; color: #9E9E9E; }
         #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
@@ -40,11 +39,27 @@
         <button class="btn-back" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
     </div>
     <div class="settings-card">
-        <div class="form-group"><label style="color:var(--primary-green);">ภาคเรียนที่</label><input type="number" id="termInput" onchange="filterStudents()"></div>
-        <div class="form-group"><label style="color:var(--primary-green);">ปีการศึกษา (พ.ศ.)</label><input type="number" id="yearInput" onchange="filterStudents()"></div>
+        <div class="form-group">
+            <label style="color:var(--primary-green);">ภาคเรียนที่</label>
+            <select id="termInput" onchange="filterStudents()">
+                <option value="1">1</option>
+                <option value="2">2</option>
+                <option value="3">3</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label style="color:var(--primary-green);">ปีการศึกษา (พ.ศ.)</label>
+            <select id="yearInput" onchange="filterStudents()">
+                <option value="2566">2566</option>
+                <option value="2567">2567</option>
+                <option value="2568">2568</option>
+                <option value="2569">2569</option>
+                <option value="2570">2570</option>
+            </select>
+        </div>
         <div class="form-group">
             <label>ประจำเดือน</label>
-            <select id="monthSelect" onchange="loadHealthData()">
+            <select id="monthSelect" onchange="loadHealthData(false)">
                 <option value="พฤษภาคม">พฤษภาคม</option><option value="มิถุนายน">มิถุนายน</option>
                 <option value="กรกฎาคม">กรกฎาคม</option><option value="สิงหาคม">สิงหาคม</option>
                 <option value="กันยายน">กันยายน</option><option value="ตุลาคม">ตุลาคม</option>
@@ -52,12 +67,7 @@
                 <option value="มกราคม">มกราคม</option><option value="กุมภาพันธ์">กุมภาพันธ์</option><option value="มีนาคม">มีนาคม</option>
             </select>
         </div>
-        <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" readonly style="background:#f5f5f5;"></div>
-    </div>
-
-    <!-- ป้ายเตือนโหมดดูข้อมูลย้อนหลัง -->
-    <div id="readOnlyBanner" class="readonly-banner">
-        ⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูลของเทอม/ปีที่ผ่านมา)
+        <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" readonly style="background:#f5f5f5; color:#888;"></div>
     </div>
 
     <div class="table-wrapper">
@@ -100,15 +110,13 @@
             const snapshot = await db.collection('Students').get();
             snapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
             filterStudents();
-        } catch (error) { console.error(error); alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); }
+        } catch (error) { console.error(error); }
     };
 
     function filterStudents() {
         const selectedTerm = document.getElementById('termInput').value;
         const selectedYear = document.getElementById('yearInput').value;
-        
         const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
-        document.getElementById('readOnlyBanner').style.display = isReadOnly ? "block" : "none";
 
         let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
         
@@ -128,7 +136,7 @@
         const tbody = document.getElementById("tableBody");
         
         if (currentStudents.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='9' style='padding:20px; color:red;'>⚠️ ไม่พบข้อมูลนักเรียนของห้องนี้ในเทอม/ปีการศึกษาที่เลือก</td></tr>"; return;
+            tbody.innerHTML = "<tr><td colspan='9' style='padding:20px; color:red;'>ไม่มีข้อมูลนักเรียนในเทอม/ปีที่เลือก</td></tr>"; return;
         }
 
         tbody.innerHTML = "<tr><td colspan='9'>⏳ กำลังโหลดข้อมูล...</td></tr>";
@@ -171,7 +179,7 @@
             await db.collection('HealthRecords').doc(`${studentId}_${month}_${year}`).set({ studentId: studentId, month: month, year: year, weight: w, height: h, className: className }, { merge: true });
             const status = document.getElementById('save-status');
             status.style.opacity = "1"; setTimeout(() => { status.style.opacity = "0"; }, 1500);
-        } catch (error) { console.error(error); alert("บันทึกล้มเหลว"); }
+        } catch (error) { console.error(error); }
     }
 
     function updateNutritionUI(stuId, gender, w, h) {
