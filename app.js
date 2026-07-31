@@ -3,18 +3,12 @@
 let currentTeacherDocId = null; 
 let currentTeacherData = null;  
 
-if ('serviceWorker' in navigator) {
-    window.addEventListener('load', () => console.log('PWA Ready'));
-}
+if ('serviceWorker' in navigator) { window.addEventListener('load', () => console.log('PWA Ready')); }
 
 document.addEventListener("DOMContentLoaded", () => {
     const loggedInUser = sessionStorage.getItem('loggedInTeacher');
-    
-    // เช็คว่ามีข้อมูลล็อกอินค้างไว้ไหม
-    if (loggedInUser) {
-        showDashboard(JSON.parse(loggedInUser));
-    } else {
-        // บังคับโชว์แค่หน้า Login
+    if (loggedInUser) { showDashboard(JSON.parse(loggedInUser)); } 
+    else {
         document.getElementById('login-section').style.display = 'block';
         document.getElementById('change-pwd-section').style.display = 'none';
         document.getElementById('dashboard-section').style.display = 'none';
@@ -25,8 +19,6 @@ async function login() {
     const usernameInput = document.getElementById('usernameInput').value.trim();
     const passwordInput = document.getElementById('passwordInput').value.trim();
     const errorMsg = document.getElementById('login-error');
-    
-    // แปลงเป็นตัวพิมพ์ใหญ่ทั้งหมด ป้องกันปัญหาครูพิมพ์ตัวพิมพ์เล็ก (t001)
     const cleanUser = usernameInput.toUpperCase(); 
 
     if (!cleanUser || !passwordInput) {
@@ -38,6 +30,12 @@ async function login() {
         errorMsg.style.display = "block"; errorMsg.style.color = "blue";
         errorMsg.innerText = "⏳ กำลังตรวจสอบข้อมูล...";
 
+        // 1. โหลดการตั้งค่าระบบ (เทอมปัจจุบัน)
+        let activeTerm = "1", activeYear = "2567";
+        const configDoc = await db.collection('Settings').doc('ActiveConfig').get();
+        if (configDoc.exists) { activeTerm = configDoc.data().term; activeYear = configDoc.data().year; }
+
+        // 2. ค้นหาข้อมูลครูเฉพาะเทอมปัจจุบัน
         const snapshot = await db.collection('Teachers').get();
         let foundDoc = null;
 
@@ -45,9 +43,12 @@ async function login() {
             const teacher = doc.data();
             const idKey = Object.keys(teacher).find(k => k.includes("รหัส"));
             const dbId = idKey && teacher[idKey] ? String(teacher[idKey]).trim().toUpperCase() : "";
-
+            
+            // เช็ค ID และเทอมให้ตรงกับปัจจุบัน (ถ้าข้อมูลเก่าไม่มีเทอม ก็อนุโลมให้ผ่านได้)
             if (dbId === cleanUser) {
-                foundDoc = { id: doc.id, data: teacher };
+                if (!teacher.term || (teacher.term === activeTerm && teacher.academicYear === activeYear)) {
+                    foundDoc = { id: doc.id, data: teacher };
+                }
             }
         });
 
@@ -59,55 +60,39 @@ async function login() {
                 const classKey = Object.keys(teacher).find(k => k.includes("ชั้น") || k.includes("ห้อง") || k.includes("ประจำชั้น"));
                 const nameKey = Object.keys(teacher).find(k => k.includes("ชื่อ"));
                 
-                currentTeacherData = {
-                    name: teacher[nameKey] || "ไม่ระบุชื่อ",
-                    className: teacher[classKey] || ""
-                };
+                currentTeacherData = { name: teacher[nameKey] || "ไม่ระบุชื่อ", className: teacher[classKey] || "" };
                 currentTeacherDocId = foundDoc.id; 
 
-                if (!currentTeacherData.className) {
-                    errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ ไม่พบข้อมูลชั้นเรียน โปรดติดต่อแอดมิน"; return;
-                }
+                if (!currentTeacherData.className) { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ ไม่พบข้อมูลชั้นเรียน"; return; }
+
+                // บันทึกเทอมปัจจุบันลงระบบ ให้หน้าอื่นเรียกใช้ได้
+                sessionStorage.setItem('activeTerm', activeTerm);
+                sessionStorage.setItem('activeYear', activeYear);
 
                 if (passwordInput === "0000") {
-                    // ไปหน้าเปลี่ยนรหัสผ่าน สั่งซ่อนหน้าอื่นให้หมด
                     document.getElementById('login-section').style.display = 'none';
                     document.getElementById('dashboard-section').style.display = 'none';
                     document.getElementById('change-pwd-section').style.display = 'block';
                 } else {
                     proceedToDashboard();
                 }
-
-            } else {
-                errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ รหัสผ่านไม่ถูกต้อง";
-            }
-        } else {
-            errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ ไม่พบรหัสประจำตัวนี้ในระบบ";
-        }
-    } catch (error) {
-        errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล";
-        console.error(error);
-    }
+            } else { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ รหัสผ่านไม่ถูกต้อง"; }
+        } else { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ ไม่พบรหัสผู้ใช้งาน หรือคุณไม่มีตารางในเทอมนี้"; }
+    } catch (error) { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ เกิดข้อผิดพลาดฐานข้อมูล"; console.error(error); }
 }
 
 async function saveNewPassword() {
     const newPwd = document.getElementById('newPassword').value;
     const confirmPwd = document.getElementById('confirmPassword').value;
     const pwdError = document.getElementById('pwd-error');
-
-    if (newPwd.length < 4) { pwdError.innerText = "❌ รหัสผ่านต้องมีอย่างน้อย 4 ตัวอักษร"; pwdError.style.display = "block"; return; }
-    if (newPwd !== confirmPwd) { pwdError.innerText = "❌ รหัสผ่านทั้ง 2 ช่องไม่ตรงกัน"; pwdError.style.display = "block"; return; }
+    if (newPwd.length < 4) { pwdError.innerText = "❌ รหัสผ่านต้องมี 4 ตัวอักษรขึ้นไป"; pwdError.style.display = "block"; return; }
+    if (newPwd !== confirmPwd) { pwdError.innerText = "❌ รหัสผ่านไม่ตรงกัน"; pwdError.style.display = "block"; return; }
 
     try {
         pwdError.style.color = "blue"; pwdError.innerText = "⏳ กำลังบันทึกรหัสผ่านใหม่..."; pwdError.style.display = "block";
-
         await db.collection('Teachers').doc(currentTeacherDocId).update({ password: newPwd });
         proceedToDashboard();
-        
-    } catch (error) {
-        pwdError.style.color = "#E53935"; pwdError.innerText = "❌ เกิดข้อผิดพลาดในการเชื่อมต่อฐานข้อมูล";
-        console.error(error);
-    }
+    } catch (error) { pwdError.style.color = "#E53935"; pwdError.innerText = "❌ ข้อผิดพลาดฐานข้อมูล"; }
 }
 
 function proceedToDashboard() {
@@ -117,19 +102,12 @@ function proceedToDashboard() {
 }
 
 function showDashboard(teacher) {
-    // สั่งซ่อนหน้า Login และหน้าเปลี่ยนรหัสผ่านให้ชัวร์
     document.getElementById('login-section').style.display = 'none';
     document.getElementById('change-pwd-section').style.display = 'none';
-    
-    // โชว์หน้า Dashboard 
     document.getElementById('dashboard-section').style.display = 'block';
 
     const hour = new Date().getHours();
-    let greetingText = "✨ สวัสดี";
-    if (hour >= 5 && hour < 12) greetingText = "🌅 สวัสดีตอนเช้าครับ";
-    else if (hour >= 12 && hour < 17) greetingText = "☀️ สวัสดีตอนบ่ายครับ";
-    else if (hour >= 17 && hour < 22) greetingText = "🌙 สวัสดีตอนเย็นครับ";
-    else greetingText = "🦉 ดึกแล้ว อย่าลืมพักผ่อนนะครับ";
+    let greetingText = (hour >= 5 && hour < 12) ? "🌅 สวัสดีตอนเช้าครับ" : (hour >= 12 && hour < 17) ? "☀️ สวัสดีตอนบ่ายครับ" : (hour >= 17 && hour < 22) ? "🌙 สวัสดีตอนเย็นครับ" : "🦉 ดึกแล้ว อย่าลืมพักผ่อนนะครับ";
     
     document.getElementById("greeting").innerText = greetingText;
     document.getElementById('displayTeacherName').innerText = teacher.name;
@@ -142,7 +120,6 @@ function goTo(page) {
 }
 
 function logout() {
-    sessionStorage.removeItem('loggedInTeacher');
-    sessionStorage.removeItem('currentClass');
+    sessionStorage.clear();
     window.location.reload(); 
 }
