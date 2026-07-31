@@ -13,17 +13,15 @@
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .header h2 { margin: 0; color: var(--primary-purple); font-weight: 700; font-size: 22px;}
         
-        /* Settings Card ของเดิมเป๊ะๆ */
         .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
         .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555;}
-        select, input[type="date"], input[type="number"], input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s;}
-        select:focus, input:focus { border-color: var(--primary-purple); }
+        input[type="date"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s;}
+        input:focus { border-color: var(--primary-purple); }
         
         button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
         button:active { transform: scale(0.96); }
         .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
         
-        /* Table เหมือนเดิม */
         .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; margin-bottom: 20px;}
         table { border-collapse: separate; border-spacing: 0; width: 100%; }
         th, td { padding: 12px 5px; text-align: center; font-size: 14px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
@@ -32,8 +30,8 @@
         input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary-green); }
 
         .holiday-alert { background: #FFEBEE; color: #C62828; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #EF9A9A; text-align: center; display: none; margin-bottom: 20px;}
+        .readonly-banner { background: #FFF3E0; color: #E65100; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #FFB74D; text-align: center; margin-bottom: 20px; display: none; }
         .btn-export { background: var(--primary-green); color: white; width: 100%; padding: 16px; font-size: 18px; margin-top: 10px;}
-        
         #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
     </style>
 </head>
@@ -45,16 +43,18 @@
     </div>
     
     <div class="settings-card">
-        <div class="form-group">
-            <label style="color:var(--primary-purple);">เลือกวันที่บันทึก (รายวัน)</label>
-            <input type="date" id="recordDate" onchange="loadDailyData()">
-        </div>
-        <div class="form-group"><label>ภาคเรียนที่</label><input type="number" id="termInput" value="1"></div>
-        <div class="form-group"><label>ปีการศึกษา</label><input type="number" id="yearInput" value="2567"></div>
+        <div class="form-group"><label style="color:var(--primary-purple);">ภาคเรียนที่</label><input type="number" id="termInput" onchange="filterStudents()"></div>
+        <div class="form-group"><label style="color:var(--primary-purple);">ปีการศึกษา (พ.ศ.)</label><input type="number" id="yearInput" onchange="filterStudents()"></div>
+        <div class="form-group"><label>เลือกวันที่บันทึก</label><input type="date" id="recordDate" onchange="loadDailyData()"></div>
+    </div>
+
+    <!-- ป้ายเตือนโหมดดูข้อมูลย้อนหลัง -->
+    <div id="readOnlyBanner" class="readonly-banner">
+        ⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูลของเทอม/ปีที่ผ่านมา)
     </div>
 
     <div id="holidayAlert" class="holiday-alert">
-        ⛔ วันนี้เป็นวันหยุด: <span id="holidayName"></span><br><span style="font-size:14px; font-weight:normal;">(ระบบปิดการบันทึกการดื่มนมในวันหยุด)</span>
+        ⛔ วันนี้เป็นวันหยุด: <span id="holidayName"></span>
     </div>
 
     <div class="table-wrapper" id="tableContainer">
@@ -69,67 +69,79 @@
             <tbody id="tableBody"></tbody>
         </table>
     </div>
-    
-    <!-- ปุ่ม Export 31 วัน โดยใช้เดือนที่เลือกจากช่อง Date -->
     <button class="btn-export" onclick="exportMonthlyToExcel()">💾 ดาวน์โหลดไฟล์ Excel (สรุปทั้งเดือน)</button>
 </div>
-
 <div id="save-status">✅ บันทึกอัตโนมัติเรียบร้อย</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
 <script>
+    let allStudents = [];
     let currentStudents = [];
     let currentHolidays = {};
     const className = sessionStorage.getItem("currentClass");
+    const activeTerm = sessionStorage.getItem('activeTerm') || "1";
+    const activeYear = sessionStorage.getItem('activeYear') || "2567";
 
     window.onload = async () => {
         if (!className) return window.location.href = "index.html";
         document.getElementById("displayClass").innerText = className;
         
+        // เซ็ตค่าเริ่มต้นให้ตรงกับระบบปัจจุบัน
+        document.getElementById('termInput').value = activeTerm;
+        document.getElementById('yearInput').value = activeYear;
         const today = new Date();
-        const yyyy = today.getFullYear();
-        const mm = String(today.getMonth() + 1).padStart(2, '0');
-        const dd = String(today.getDate()).padStart(2, '0');
-        document.getElementById('recordDate').value = `${yyyy}-${mm}-${dd}`;
+        document.getElementById('recordDate').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
         try {
             const holSnapshot = await db.collection('Holidays').get();
             holSnapshot.forEach(doc => { currentHolidays[doc.id] = doc.data().name; });
 
             const stuSnapshot = await db.collection('Students').get();
-            const allStudents = [];
-            stuSnapshot.forEach(doc => {
-                let data = doc.data(); data.docId = doc.id;
-                allStudents.push(data);
-            });
+            stuSnapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
 
-            let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
-            currentStudents = allStudents.filter(std => std[classKey] === className);
-            
-            loadDailyData();
-        } catch (error) {
-            console.error(error); alert("เกิดข้อผิดพลาดในการดึงข้อมูล");
-        }
+            filterStudents(); // กรองเด็กตามเทอม/ปี
+        } catch (error) { console.error(error); alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); }
     };
+
+    // ฟังก์ชันกรองเด็ก (เปลี่ยนเมื่อคลิกเปลี่ยนเทอมหรือปี)
+    function filterStudents() {
+        const selectedTerm = document.getElementById('termInput').value;
+        const selectedYear = document.getElementById('yearInput').value;
+        
+        // เช็คโหมด Read-Only
+        const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
+        document.getElementById('readOnlyBanner').style.display = isReadOnly ? "block" : "none";
+
+        let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
+        
+        currentStudents = allStudents.filter(std => {
+            let classMatch = (std[classKey] === className);
+            let termMatch = (std.term === selectedTerm || (!std.term && selectedTerm === activeTerm)); // รองรับข้อมูลเก่า
+            let yearMatch = (std.academicYear === selectedYear || (!std.academicYear && selectedYear === activeYear));
+            return classMatch && termMatch && yearMatch;
+        });
+
+        loadDailyData();
+    }
 
     async function loadDailyData() {
         const dateVal = document.getElementById('recordDate').value;
+        const selectedTerm = document.getElementById('termInput').value;
+        const selectedYear = document.getElementById('yearInput').value;
+        const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
+        
         const alertBox = document.getElementById('holidayAlert');
         const tableBox = document.getElementById('tableContainer');
         const tbody = document.getElementById('tableBody');
 
         if(!dateVal) return;
-        const selectedDate = new Date(dateVal);
-        const dayOfWeek = selectedDate.getDay();
+        const dayOfWeek = new Date(dateVal).getDay();
 
         let isHoliday = false; let holidayText = "";
-        if (dayOfWeek === 0 || dayOfWeek === 6) {
-            isHoliday = true; holidayText = "เสาร์-อาทิตย์";
-        } else if (currentHolidays[dateVal]) {
-            isHoliday = true; holidayText = currentHolidays[dateVal];
-        }
+        if (dayOfWeek === 0 || dayOfWeek === 6) { isHoliday = true; holidayText = "เสาร์-อาทิตย์"; } 
+        else if (currentHolidays[dateVal]) { isHoliday = true; holidayText = currentHolidays[dateVal]; }
 
         if (isHoliday) {
             alertBox.style.display = "block"; document.getElementById('holidayName').innerText = holidayText;
@@ -137,6 +149,10 @@
         }
 
         alertBox.style.display = "none"; tableBox.style.display = "block";
+        if (currentStudents.length === 0) {
+            tbody.innerHTML = "<tr><td colspan='3' style='padding:20px; color:red;'>⚠️ ไม่พบข้อมูลนักเรียนของห้องนี้ในเทอม/ปีการศึกษาที่เลือก</td></tr>"; return;
+        }
+
         tbody.innerHTML = "<tr><td colspan='3'>⏳ กำลังโหลดข้อมูล...</td></tr>";
 
         const recordsSnapshot = await db.collection('MilkRecords').where('className', '==', className).where('date', '==', dateVal).get();
@@ -147,11 +163,12 @@
         currentStudents.forEach((student, index) => {
             const stuId = student.docId;
             const isChecked = savedRecords[stuId] === true ? "checked" : "";
+            const disabledAttr = isReadOnly ? "disabled" : "";
             tbody.innerHTML += `
                 <tr>
                     <td>${index + 1}</td>
                     <td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "-"}</b></td>
-                    <td><input type="checkbox" id="cb_${stuId}" ${isChecked} onchange="autoSaveMilk('${stuId}')"></td>
+                    <td><input type="checkbox" id="cb_${stuId}" ${isChecked} ${disabledAttr} onchange="autoSaveMilk('${stuId}')"></td>
                 </tr>
             `;
         });
@@ -160,68 +177,56 @@
     async function autoSaveMilk(studentId) {
         const dateVal = document.getElementById('recordDate').value;
         const isChecked = document.getElementById(`cb_${studentId}`).checked;
-        const recordId = `${studentId}_${dateVal}`; 
         try {
-            await db.collection('MilkRecords').doc(recordId).set({ studentId: studentId, date: dateVal, status: isChecked, className: className }, { merge: true });
+            await db.collection('MilkRecords').doc(`${studentId}_${dateVal}`).set({ studentId: studentId, date: dateVal, status: isChecked, className: className }, { merge: true });
             const status = document.getElementById('save-status');
             status.style.opacity = "1"; setTimeout(() => { status.style.opacity = "0"; }, 1500);
         } catch (error) { console.error(error); alert("บันทึกล้มเหลว"); }
     }
 
     async function exportMonthlyToExcel() {
-        const dateVal = document.getElementById('recordDate').value; // ดึง YYYY-MM จากวันที่เลือก
-        if(!dateVal) { alert("กรุณาเลือกวันที่ในเดือนที่ต้องการดาวน์โหลดก่อนครับ"); return; }
-        
-        const yyyy = dateVal.substring(0, 4);
-        const mm = dateVal.substring(5, 7);
-        const monthPrefix = `${yyyy}-${mm}`;
+        const dateVal = document.getElementById('recordDate').value; 
         const term = document.getElementById('termInput').value;
         const yearTh = document.getElementById('yearInput').value;
+        if(!dateVal) return alert("กรุณาเลือกวันที่ในเดือนที่ต้องการดาวน์โหลด");
         
-        // แปลงเดือนตัวเลขเป็นชื่อภาษาไทย
+        const yyyy = dateVal.substring(0, 4); const mm = dateVal.substring(5, 7);
         const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        const monthName = thaiMonths[parseInt(mm) - 1];
-
+        
         try {
             const recordsSnapshot = await db.collection('MilkRecords').where('className', '==', className).get();
             let monthRecords = {};
             recordsSnapshot.forEach(doc => {
                 const data = doc.data();
-                if(data.date.startsWith(monthPrefix) && data.status === true) {
+                if(data.date.startsWith(`${yyyy}-${mm}`) && data.status === true) {
                     if(!monthRecords[data.studentId]) monthRecords[data.studentId] = {};
                     monthRecords[data.studentId][data.date] = true;
                 }
             });
 
-            let exportData = [["แบบฟอร์มบันทึกข้อมูลการดื่มนม"], [`ประจำเดือน ${monthName}`, "", `โรงเรียน เสนาบดี`, "", `ภาคเรียนที่ ${term}`, "", `ปีการศึกษา ${yearTh}`, "", `ชั้น ${className}`]];
-            let headers = ["ลำดับที่", "ชื่อ-สกุล", "วัน/เดือน/ปี เกิด"];
-            for (let i = 1; i <= 31; i++) headers.push(i);
+            let exportData = [["แบบฟอร์มบันทึกข้อมูลการดื่มนม"], [`ประจำเดือน ${thaiMonths[parseInt(mm)-1]}`, "", `โรงเรียน เสนาบดี`, "", `ภาคเรียนที่ ${term}`, "", `ปีการศึกษา ${yearTh}`, "", `ชั้น ${className}`]];
+            let headers = ["ลำดับที่", "ชื่อ-สกุล", "วัน/เดือน/ปี เกิด"]; for (let i = 1; i <= 31; i++) headers.push(i);
             exportData.push(headers);
 
             currentStudents.forEach((student, index) => {
                 let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || ""];
                 for (let i = 1; i <= 31; i++) {
                     const testDateStr = `${yyyy}-${mm}-${String(i).padStart(2, '0')}`;
-                    const testDateObj = new Date(testDateStr);
-                    const isDayValid = testDateObj.getMonth() + 1 === parseInt(mm);
-                    const dayOfWeek = testDateObj.getDay();
-
-                    if (!isDayValid || dayOfWeek === 0 || dayOfWeek === 6 || currentHolidays[testDateStr]) {
+                    const dObj = new Date(testDateStr);
+                    if (dObj.getMonth()+1 !== parseInt(mm) || dObj.getDay()===0 || dObj.getDay()===6 || currentHolidays[testDateStr]) {
                         row.push(""); 
                     } else {
-                        const didDrink = monthRecords[student.docId] && monthRecords[student.docId][testDateStr];
-                        row.push(didDrink ? "/" : "");
+                        row.push((monthRecords[student.docId] && monthRecords[student.docId][testDateStr]) ? "/" : "");
                     }
                 }
                 exportData.push(row);
             });
 
             const ws = XLSX.utils.aoa_to_sheet(exportData);
-            ws['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 15 }];
-            for (let i = 0; i < 31; i++) ws['!cols'].push({ wch: 4 });
+            ws['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 15 }]; for (let i = 0; i < 31; i++) ws['!cols'].push({ wch: 4 });
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
-            XLSX.writeFile(wb, `บันทึกดื่มนม_ชั้น${className.replace('/', '-')}_${monthName}_${yearTh}.xlsx`);
-        } catch (error) { console.error(error); alert("เกิดข้อผิดพลาดในการสร้าง Excel"); }
+            XLSX.writeFile(wb, `บันทึกดื่มนม_ชั้น${className.replace('/', '-')}_${thaiMonths[parseInt(mm)-1]}_${yearTh}.xlsx`);
+        } catch (e) { alert("เกิดข้อผิดพลาดในการสร้าง Excel"); }
     }
 </script>
 </body>
