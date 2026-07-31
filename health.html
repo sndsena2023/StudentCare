@@ -15,6 +15,7 @@
         .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
         .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555; }
         select, input[type="text"], input[type="number"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; }
+        select:focus, input:focus { border-color: var(--primary-green); }
         button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
         .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
         .btn-export { background: var(--primary-purple); color: white; width: 100%; margin-top: 20px; padding: 16px; font-size: 18px; display: flex; justify-content: center; gap: 10px;}
@@ -25,8 +26,11 @@
         th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: #ffffff; z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.05); text-align: left; min-width: 150px; }
         th:nth-child(2) { background-color: var(--primary-green); color: white; z-index: 3;}
         .input-hw { width: 70px; padding: 8px; border: 2px solid #E0E0E0; border-radius: 8px; text-align: center; outline: none; font-family: 'Sarabun', sans-serif;}
+        .input-hw:focus { border-color: var(--primary-green); background: #F1F8E9;}
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; min-width: 80px;}
         .status-normal { background: #E8F5E9; color: #2E7D32; } .status-warning { background: #FFF3E0; color: #E65100; } .status-danger { background: #FFEBEE; color: #C62828; } .status-empty { background: #F5F5F5; color: #9E9E9E; }
+        
+        #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
     </style>
 </head>
 <body>
@@ -36,10 +40,19 @@
         <button class="btn-back" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
     </div>
     <div class="settings-card">
-        <div class="form-group"><label>ประจำเดือน</label><input type="text" id="monthInput" value="พฤษภาคม"></div>
+        <div class="form-group">
+            <label>ประจำเดือน</label>
+            <select id="monthSelect" onchange="loadHealthData()">
+                <option value="พฤษภาคม">พฤษภาคม</option><option value="มิถุนายน">มิถุนายน</option>
+                <option value="กรกฎาคม">กรกฎาคม</option><option value="สิงหาคม">สิงหาคม</option>
+                <option value="กันยายน">กันยายน</option><option value="ตุลาคม">ตุลาคม</option>
+                <option value="พฤศจิกายน">พฤศจิกายน</option><option value="ธันวาคม">ธันวาคม</option>
+                <option value="มกราคม">มกราคม</option><option value="กุมภาพันธ์">กุมภาพันธ์</option><option value="มีนาคม">มีนาคม</option>
+            </select>
+        </div>
         <div class="form-group"><label>ภาคเรียนที่</label><input type="number" id="termInput" value="1"></div>
-        <div class="form-group"><label>ปีการศึกษา</label><input type="number" id="yearInput" value="2567"></div>
-        <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" placeholder="ชื่อคุณครู..."></div>
+        <div class="form-group"><label>ปีการศึกษา</label><input type="number" id="yearInput" value="2567" onchange="loadHealthData()"></div>
+        <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" readonly style="background:#f5f5f5;"></div>
     </div>
     <div class="table-wrapper">
         <table id="healthTable">
@@ -54,8 +67,10 @@
             <tbody id="tableBody"></tbody>
         </table>
     </div>
-    <button class="btn-export" onclick="exportToExcel()">💾 บันทึกและดาวน์โหลดไฟล์ Excel</button>
+    <button class="btn-export" onclick="exportToExcel()">💾 ดาวน์โหลดไฟล์ Excel</button>
 </div>
+
+<div id="save-status">✅ บันทึกอัตโนมัติเรียบร้อย</div>
 
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
@@ -68,102 +83,105 @@
         if (!className) return window.location.href = "index.html";
         document.getElementById("displayClass").innerText = className;
         
+        const loggedInUser = sessionStorage.getItem('loggedInTeacher');
+        if (loggedInUser) document.getElementById("teacherInput").value = JSON.parse(loggedInUser).name;
+
         try {
             const snapshot = await db.collection('Students').get();
             const allStudents = [];
-            snapshot.forEach(doc => allStudents.push(doc.data()));
+            snapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
 
-            let classKey = "ชั้นเรียน";
-            if(allStudents.length > 0){
-                const foundKey = Object.keys(allStudents[0]).find(k => k.includes("ชั้น") || k.includes("ห้อง"));
-                if(foundKey) classKey = foundKey;
-            }
-            
+            let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
             currentStudents = allStudents.filter(std => std[classKey] === className);
-            if (currentStudents.length === 0) {
-                document.getElementById("tableBody").innerHTML = "<tr><td colspan='9' style='color:#D32F2F; padding: 20px;'>⚠️ ไม่พบรายชื่อนักเรียนในห้องนี้</td></tr>";
-                return;
-            }
             
-            // นำชื่อครูที่ล็อกอินมาใส่ในช่องอัตโนมัติ
-            const loggedInUser = sessionStorage.getItem('loggedInTeacher');
-            if (loggedInUser) {
-                document.getElementById("teacherInput").value = JSON.parse(loggedInUser).name;
-            }
-            renderTable();
-            
-        } catch (error) {
-            console.error("ดึงข้อมูลนักเรียนล้มเหลว:", error);
-            alert("เกิดข้อผิดพลาดในการดึงข้อมูลนักเรียน");
-        }
+            loadHealthData();
+        } catch (error) { console.error(error); alert("เกิดข้อผิดพลาดในการดึงข้อมูล"); }
     };
 
-    function calculateAge(dobString) {
-        if (!dobString) return { y: "-", m: "-" };
-        let parts = dobString.split('/');
-        if(parts.length !== 3) return { y: "-", m: "-" };
-        let year = parseInt(parts[2]);
-        if (year > 2400) year -= 543; 
-        let dob = new Date(year, parseInt(parts[1]) - 1, parseInt(parts[0]));
-        let today = new Date();
-        let ageY = today.getFullYear() - dob.getFullYear();
-        let ageM = today.getMonth() - dob.getMonth();
-        if (ageM < 0 || (ageM === 0 && today.getDate() < dob.getDate())) { ageY--; ageM += 12; }
-        return { y: ageY, m: ageM };
-    }
-
-    function analyzeHealth(gender, weight, height) {
-        if(!weight || !height) return { wh: "รอข้อมูล", ha: "รอข้อมูล", whClass: "status-empty", haClass: "status-empty" };
-        let bmi = weight / ((height/100) * (height/100));
-        let whResult = "สมส่วน"; let whClass = "status-normal"; let haResult = "สูงตามเกณฑ์"; let haClass = "status-normal";
-        if (bmi < 15) { whResult = "ผอม"; whClass = "status-danger"; }
-        else if (bmi < 16.5) { whResult = "ค่อนข้างผอม"; whClass = "status-warning"; }
-        else if (bmi > 23) { whResult = "อ้วน"; whClass = "status-danger"; }
-        else if (bmi > 20) { whResult = "เริ่มอ้วน"; whClass = "status-warning"; }
-        if (height < 120) { haResult = "เตี้ย"; haClass = "status-danger"; } else if (height > 155) { haResult = "สูง"; haClass = "status-normal"; }
-        return { wh: whResult, ha: haResult, whClass: whClass, haClass: haClass };
-    }
-
-    function renderTable() {
+    async function loadHealthData() {
+        const month = document.getElementById('monthSelect').value;
+        const year = document.getElementById('yearInput').value;
         const tbody = document.getElementById("tableBody");
+        tbody.innerHTML = "<tr><td colspan='9'>⏳ กำลังโหลดข้อมูล...</td></tr>";
+
+        const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', className).where('month', '==', month).where('year', '==', year).get();
+        let savedRecords = {};
+        recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data(); });
+
+        tbody.innerHTML = "";
         currentStudents.forEach((student, index) => {
-            const tr = document.createElement("tr");
+            const stuId = student.docId;
             const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
+            const savedW = savedRecords[stuId] ? savedRecords[stuId].weight : "";
+            const savedH = savedRecords[stuId] ? savedRecords[stuId].height : "";
+
+            const tr = document.createElement("tr");
             tr.innerHTML = `
                 <td>${index + 1}</td>
                 <td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || ""}</b></td>
                 <td>${student['เพศ'] || "-"}</td><td>${age.y}</td><td>${age.m}</td>
-                <td><input type="number" class="input-hw" id="w_${index}" step="0.1" oninput="updateNutrition(${index}, '${student['เพศ']}')"></td>
-                <td><input type="number" class="input-hw" id="h_${index}" step="0.1" oninput="updateNutrition(${index}, '${student['เพศ']}')"></td>
-                <td><span class="badge status-empty" id="badge_wh_${index}">รอข้อมูล</span></td><td><span class="badge status-empty" id="badge_ha_${index}">รอข้อมูล</span></td>
+                <td><input type="number" class="input-hw" id="w_${stuId}" value="${savedW}" step="0.1" onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
+                <td><input type="number" class="input-hw" id="h_${stuId}" value="${savedH}" step="0.1" onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
+                <td><span class="badge status-empty" id="badge_wh_${stuId}">รอข้อมูล</span></td><td><span class="badge status-empty" id="badge_ha_${stuId}">รอข้อมูล</span></td>
             `;
             tbody.appendChild(tr);
+            if(savedW && savedH) updateNutritionUI(stuId, student['เพศ'], savedW, savedH);
         });
     }
 
-    window.updateNutrition = function(index, gender) {
-        let result = analyzeHealth(gender, parseFloat(document.getElementById(`w_${index}`).value), parseFloat(document.getElementById(`h_${index}`).value));
-        document.getElementById(`badge_wh_${index}`).className = `badge ${result.whClass}`; document.getElementById(`badge_wh_${index}`).innerText = result.wh;
-        document.getElementById(`badge_ha_${index}`).className = `badge ${result.haClass}`; document.getElementById(`badge_ha_${index}`).innerText = result.ha;
+    async function autoSaveHealth(studentId, gender) {
+        const month = document.getElementById('monthSelect').value;
+        const year = document.getElementById('yearInput').value;
+        const w = parseFloat(document.getElementById(`w_${studentId}`).value) || 0;
+        const h = parseFloat(document.getElementById(`h_${studentId}`).value) || 0;
+        const recordId = `${studentId}_${month}_${year}`;
+
+        if (w > 0 && h > 0) updateNutritionUI(studentId, gender, w, h);
+
+        try {
+            await db.collection('HealthRecords').doc(recordId).set({ studentId: studentId, month: month, year: year, weight: w, height: h, className: className }, { merge: true });
+            const status = document.getElementById('save-status');
+            status.style.opacity = "1"; setTimeout(() => { status.style.opacity = "0"; }, 1500);
+        } catch (error) { console.error(error); alert("บันทึกล้มเหลว"); }
+    }
+
+    function updateNutritionUI(stuId, gender, w, h) {
+        let bmi = w / ((h/100) * (h/100));
+        let whResult = "สมส่วน"; let whClass = "status-normal"; let haResult = "สูงตามเกณฑ์"; let haClass = "status-normal";
+        if (bmi < 15) { whResult = "ผอม"; whClass = "status-danger"; } else if (bmi < 16.5) { whResult = "ค่อนข้างผอม"; whClass = "status-warning"; } else if (bmi > 23) { whResult = "อ้วน"; whClass = "status-danger"; } else if (bmi > 20) { whResult = "เริ่มอ้วน"; whClass = "status-warning"; }
+        if (h < 120) { haResult = "เตี้ย"; haClass = "status-danger"; } else if (h > 155) { haResult = "สูง"; haClass = "status-normal"; }
+        document.getElementById(`badge_wh_${stuId}`).className = `badge ${whClass}`; document.getElementById(`badge_wh_${stuId}`).innerText = whResult;
+        document.getElementById(`badge_ha_${stuId}`).className = `badge ${haClass}`; document.getElementById(`badge_ha_${stuId}`).innerText = haResult;
+    }
+
+    function calculateAge(dobString) {
+        if (!dobString) return { y: "-", m: "-" };
+        let parts = dobString.split('/'); if(parts.length !== 3) return { y: "-", m: "-" };
+        let year = parseInt(parts[2]); if (year > 2400) year -= 543; 
+        let dob = new Date(year, parseInt(parts[1]) - 1, parseInt(parts[0]));
+        let today = new Date(); let ageY = today.getFullYear() - dob.getFullYear(); let ageM = today.getMonth() - dob.getMonth();
+        if (ageM < 0 || (ageM === 0 && today.getDate() < dob.getDate())) { ageY--; ageM += 12; }
+        return { y: ageY, m: ageM };
     }
 
     function exportToExcel() {
-        const month = document.getElementById("monthInput").value;
+        const month = document.getElementById("monthSelect").value;
         const term = document.getElementById("termInput").value;
         const year = document.getElementById("yearInput").value;
         const teacher = document.getElementById("teacherInput").value;
 
         let exportData = [
             ["แบบบันทึกน้ำหนัก - ส่วนสูง", `ประจำเดือน ${month}`],
-            [`ชั้น ${className}`, `ภาคเรียนที่ ${term}`, `ปีการศึกษา ${year}`, `ครูประจำชั้น ${teacher}`],
-            [],
+            [`ชั้น ${className}`, `ภาคเรียนที่ ${term}`, `ปีการศึกษา ${year}`, `ครูประจำชั้น ${teacher}`], [],
             ["ลำดับที่", "ชื่อ - สกุล", "เพศ", "อายุ (ปี)", "อายุ (เดือน)", "น้ำหนัก", "ส่วนสูง", "ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน", "เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"]
         ];
 
         currentStudents.forEach((student, index) => {
             const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
-            let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['เพศ'] || "", age.y, age.m, document.getElementById(`w_${index}`).value || "", document.getElementById(`h_${index}`).value || ""];
-            let whResult = document.getElementById(`badge_wh_${index}`).innerText; let haResult = document.getElementById(`badge_ha_${index}`).innerText;
+            const w = document.getElementById(`w_${student.docId}`).value || "";
+            const h = document.getElementById(`h_${student.docId}`).value || "";
+            let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['เพศ'] || "", age.y, age.m, w, h];
+            let whResult = document.getElementById(`badge_wh_${student.docId}`).innerText; let haResult = document.getElementById(`badge_ha_${student.docId}`).innerText;
             ["ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน"].forEach(opt => row.push(whResult === opt ? "/" : ""));
             ["เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"].forEach(opt => row.push(haResult === opt ? "/" : ""));
             exportData.push(row);
