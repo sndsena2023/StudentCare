@@ -2,96 +2,63 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>ระบบบันทึกสุขภาพนักเรียน</title>
-    <link rel="manifest" href="manifest.json">
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ส่วนผู้ดูแลระบบ (Admin)</title>
+    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        :root { --primary-purple: #6A1B9A; --light-purple: #F3E5F5; --primary-green: #2E7D32; --light-green: #E8F5E9; --text-dark: #2C3E50; --text-muted: #7F8C8D; }
-        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #F3E5F5 0%, #E8F5E9 100%); background-attachment: fixed; color: var(--text-dark); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
-        @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .container { width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(106, 27, 154, 0.1); text-align: center; animation: slideUpFade 0.5s ease forwards; box-sizing: border-box; }
-        
-        /* สไตล์สำหรับโลโก้โรงเรียน */
-        .school-logo { width: 120px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
-        
-        .form-label { text-align: left; font-size: 14px; font-weight: 600; color: #555; margin-bottom: 5px; display: block;}
-        input[type="text"], input[type="password"] { width: 100%; padding: 15px; border-radius: 14px; border: 2px solid #EEEEEE; font-size: 16px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s; margin-bottom: 15px; letter-spacing: 1px; text-align: center;}
-        input:focus { border-color: var(--primary-purple); background-color: #FAFAFA; }
-        .btn-main { background-color: var(--primary-purple); color: white; width: 100%; padding: 16px; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; margin-top: 5px; cursor: pointer; transition: 0.3s; }
-        .btn-main:hover { background-color: #4A148C; box-shadow: 0 5px 15px rgba(106, 27, 154, 0.2); }
-
-        #greeting { color: var(--primary-purple); font-size: 16px; font-weight: 600; margin-bottom: 5px; }
-        h2 { color: var(--text-dark); margin-top: 0; margin-bottom: 5px; font-weight: 700; font-size: 24px;}
-        p.subtitle { color: var(--text-muted); margin-bottom: 25px; font-size: 15px; font-weight: 300;}
-        
-        .profile-card { background: var(--light-green); border: 1px solid #C8E6C9; padding: 15px; border-radius: 16px; margin-bottom: 25px; text-align: center; }
-        .profile-name { font-size: 18px; font-weight: bold; color: var(--primary-green); margin: 0 0 5px 0;}
-        .profile-class { font-size: 15px; color: #388E3C; margin: 0; }
-        
-        button.action-btn { font-family: 'Sarabun', sans-serif; width: 100%; padding: 16px 20px; margin-bottom: 15px; border: none; border-radius: 14px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; justify-content: center; align-items: center; gap: 10px; }
-        button.action-btn:active { transform: scale(0.96); }
-        .btn-milk { background-color: var(--light-purple); color: var(--primary-purple); }
-        .btn-health { background-color: var(--light-green); color: var(--primary-green); }
-        .btn-logout { background-color: transparent; color: #E53935; text-decoration: underline; font-size: 14px; margin-top: 15px; border: none; cursor: pointer; }
+        :root { --primary-purple: #6A1B9A; --primary-green: #2E7D32; --bg-color: #F8F9FA; --text-dark: #333333; }
+        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-color); color: var(--text-dark); margin: 0; padding: 30px 15px; }
+        .container { max-width: 650px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
+        .nav-link { display: inline-block; margin-bottom: 25px; text-decoration: none; color: var(--primary-purple); font-weight: 600; background: #F3E5F5; padding: 8px 16px; border-radius: 20px; transition: 0.3s;}
+        .nav-link:hover { background: var(--primary-purple); color: white; }
+        h2 { text-align: center; color: var(--text-dark); margin-top: 0; font-size: 24px;}
+        p.subtitle { text-align: center; color: #888; margin-bottom: 35px; font-size: 15px;}
+        .card { border: 1px solid #EBEBEB; border-radius: 16px; padding: 25px; margin-bottom: 25px; transition: 0.3s; }
+        .card h4 { margin-top: 0; color: var(--primary-purple); font-size: 18px; margin-bottom: 15px;}
+        .paste-area { width: 100%; height: 100px; padding: 15px; box-sizing: border-box; border: 2px dashed #CCCCCC; border-radius: 12px; margin-bottom: 15px; font-family: 'Sarabun', sans-serif; font-size: 14px; background: #FAFAFA; outline: none; resize: vertical; }
+        .paste-area:focus { border-color: var(--primary-purple); background: white; }
+        button { font-family: 'Sarabun', sans-serif; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; background-color: var(--primary-green); color: white; }
+        button:hover { background-color: #1B5E20; transform: translateY(-2px); }
+        .status-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
+        .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap;}
+        .form-group input { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; flex: 1; min-width: 150px; outline: none;}
+        .form-group input:focus { border-color: var(--primary-purple); }
     </style>
 </head>
 <body>
 <div class="container">
+    <a href="index.html" class="nav-link">← กลับหน้าหลัก</a>
+    <h2>⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
+    <p class="subtitle">กำหนดวันหยุด และแก้ไขฐานข้อมูลพื้นฐาน</p>
     
-    <!-- หน้าต่าง Login -->
-    <div id="login-section">
-        <!-- เปลี่ยนอีโมจิกุญแจ เป็นโลโก้โรงเรียน -->
-        <img src="logo.png" alt="โลโก้โรงเรียนเสนาบดี" class="school-logo">
-        
-        <h2>เข้าสู่ระบบสำหรับครู</h2>
-        <p class="subtitle">ระบบบันทึกสุขภาพและการดื่มนม</p>
-        
-        <label class="form-label">รหัสประจำตัวอาจารย์:</label>
-        <input type="text" id="usernameInput" placeholder="เช่น T001">
-        
-        <label class="form-label">รหัสผ่าน:</label>
-        <input type="password" id="passwordInput" placeholder="••••••••">
-        
-        <button class="btn-main" onclick="login()">เข้าสู่ระบบ</button>
-        <div id="login-error" style="color: #E53935; font-size: 14px; margin-top: 15px; display: none;"></div>
-    </div>
-
-    <!-- หน้าต่างบังคับเปลี่ยนรหัสผ่าน -->
-    <div id="change-pwd-section" style="display: none;">
-        <!-- ใช้โลโก้โรงเรียนในหน้าเปลี่ยนรหัสด้วยเพื่อความสวยงาม -->
-        <img src="logo.png" alt="โลโก้โรงเรียนเสนาบดี" class="school-logo">
-        
-        <h2>เปลี่ยนรหัสผ่านครั้งแรก</h2>
-        <p class="subtitle" style="color: #E65100;">เพื่อความปลอดภัย กรุณาตั้งรหัสผ่านใหม่</p>
-        
-        <input type="password" id="newPassword" placeholder="รหัสผ่านใหม่ (อย่างน้อย 4 ตัว)">
-        <input type="password" id="confirmPassword" placeholder="ยืนยันรหัสผ่านใหม่อีกครั้ง">
-        
-        <button class="btn-main" style="background-color: var(--primary-green);" onclick="saveNewPassword()">บันทึกรหัสผ่านใหม่</button>
-        <div id="pwd-error" style="color: #E53935; font-size: 14px; margin-top: 15px; display: none;"></div>
-    </div>
-
-    <!-- หน้าหลัก (Dashboard) -->
-    <div id="dashboard-section" style="display: none;">
-        <div id="greeting">✨ สวัสดี</div>
-        <h2>ระบบจัดการชั้นเรียน</h2>
-        
-        <div class="profile-card">
-            <p class="profile-name" id="displayTeacherName">ครู...</p>
-            <p class="profile-class">📌 รับผิดชอบชั้น: <span id="displayTeacherClass" style="font-weight:bold;">-</span></p>
+    <div class="card">
+        <h4>🗓️ 1. กำหนดวันหยุดพิเศษ (ระบบจะบล็อกไม่ให้ครูติ๊กนม)</h4>
+        <div class="form-group">
+            <input type="date" id="holidayDate">
+            <input type="text" id="holidayName" placeholder="ชื่อวันหยุด (เช่น วันแม่, ชดเชย)">
         </div>
-
-        <button class="action-btn btn-milk" onclick="goTo('milk')"><span style="font-size: 20px;">🥛</span> บันทึกการดื่มนม</button>
-        <button class="action-btn btn-health" onclick="goTo('health')"><span style="font-size: 20px;">⚖️</span> บันทึกน้ำหนัก-ส่วนสูง</button>
-        <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
+        <button onclick="saveHoliday()" style="background-color: #E65100;">บันทึกวันหยุดพิเศษ</button>
+        <div id="status-holiday" class="status-msg"></div>
     </div>
 
+    <div class="card">
+        <h4>👨‍🏫 2. ฐานข้อมูลครูประจำชั้น (ตั้งรหัส 0000 ให้อัตโนมัติ)</h4>
+        <textarea id="teacherData" class="paste-area" placeholder="วางข้อมูล... (รหัสประจำตัว | ชื่อ-สกุล | ชั้นเรียน)"></textarea>
+        <button onclick="importData('teacher')">บันทึกข้อมูลครู</button>
+        <div id="status-teacher" class="status-msg"></div>
+    </div>
+
+    <div class="card">
+        <h4>👦👧 3. ฐานข้อมูลนักเรียน</h4>
+        <textarea id="studentData" class="paste-area" placeholder="วางข้อมูล... (เลขที่ | รหัสประจำตัว | ชื่อ-สกุล | เพศ | วันเกิด | ชั้นเรียน)"></textarea>
+        <button onclick="importData('student')">บันทึกข้อมูลนักเรียน</button>
+        <div id="status-student" class="status-msg"></div>
+    </div>
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
-<script src="app.js"></script>
+<script src="admin.js"></script>
 </body>
 </html>
