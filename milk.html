@@ -12,24 +12,20 @@
         .container { max-width: 900px; margin: auto; background: rgba(255, 255, 255, 0.98); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(106, 27, 154, 0.08); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
         .header h2 { margin: 0; color: var(--primary-purple); font-weight: 700; font-size: 22px;}
-        
         .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
         .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555;}
         input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s;}
         input:focus, select:focus { border-color: var(--primary-purple); }
-        
         button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        button:active { transform: scale(0.96); }
         .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
-        
         .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; margin-bottom: 20px;}
         table { border-collapse: separate; border-spacing: 0; width: 100%; }
         th, td { padding: 12px 5px; text-align: center; font-size: 14px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
         th { background-color: var(--primary-purple); color: white; }
         td:nth-child(2) { text-align: left; padding-left: 15px; }
         input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary-green); }
-
         .holiday-alert { background: #FFEBEE; color: #C62828; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #EF9A9A; text-align: center; display: none; margin-bottom: 20px;}
+        .readonly-banner { background: #FFF3E0; color: #E65100; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #FFB74D; text-align: center; margin-bottom: 20px; display: none; }
         .btn-export { background: var(--primary-green); color: white; width: 100%; padding: 16px; font-size: 18px; margin-top: 10px;}
         #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
     </style>
@@ -37,7 +33,7 @@
 <body>
 <div class="container">
     <div class="header">
-        <h2>🥛 บันทึกดื่มนม (รายวัน) ชั้น <span id="displayClass" style="color:var(--primary-green);"></span></h2>
+        <h2>🥛 บันทึกดื่มนม ชั้น <span id="displayClass" style="color:var(--primary-green);"></span></h2>
         <button class="btn-back" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
     </div>
     
@@ -45,27 +41,25 @@
         <div class="form-group">
             <label style="color:var(--primary-purple);">ภาคเรียนที่</label>
             <select id="termInput" onchange="filterStudents()">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
             </select>
         </div>
         <div class="form-group">
             <label style="color:var(--primary-purple);">ปีการศึกษา (พ.ศ.)</label>
             <select id="yearInput" onchange="filterStudents()">
-                <option value="2569">2566</option>
-                <option value="2570">2567</option>
-                <option value="2571">2568</option>
-                <option value="2572">2569</option>
-                <option value="2573">2570</option>
+                <option value="2569" selected>2569</option>
+                <option value="2570">2570</option>
+                <option value="2571">2571</option>
+                <option value="2572">2572</option>
+                <option value="2573">2573</option>
+                <option value="2574">2574</option>
             </select>
         </div>
         <div class="form-group"><label>เลือกวันที่บันทึก</label><input type="date" id="recordDate" onchange="loadDailyData()"></div>
     </div>
 
-    <div id="holidayAlert" class="holiday-alert">
-        ⛔ วันนี้เป็นวันหยุด: <span id="holidayName"></span>
-    </div>
+    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล)</div>
+    <div id="holidayAlert" class="holiday-alert">⛔ วันนี้เป็นวันหยุด: <span id="holidayName"></span></div>
 
     <div class="table-wrapper" id="tableContainer">
         <table id="milkTable">
@@ -87,12 +81,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
 <script>
-    let allStudents = [];
-    let currentStudents = [];
-    let currentHolidays = {};
+    let allStudents = []; let currentStudents = []; let currentHolidays = {};
     const className = sessionStorage.getItem("currentClass");
     const activeTerm = sessionStorage.getItem('activeTerm') || "1";
-    const activeYear = sessionStorage.getItem('activeYear') || "2567";
+    const activeYear = sessionStorage.getItem('activeYear') || "2569";
 
     window.onload = async () => {
         if (!className) return window.location.href = "index.html";
@@ -106,10 +98,8 @@
         try {
             const holSnapshot = await db.collection('Holidays').get();
             holSnapshot.forEach(doc => { currentHolidays[doc.id] = doc.data().name; });
-
             const stuSnapshot = await db.collection('Students').get();
             stuSnapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
-
             filterStudents(); 
         } catch (error) { console.error(error); }
     };
@@ -117,23 +107,22 @@
     function filterStudents() {
         const selectedTerm = document.getElementById('termInput').value;
         const selectedYear = document.getElementById('yearInput').value;
-        let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
         
+        const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
+        document.getElementById('readOnlyBanner').style.display = isReadOnly ? "block" : "none";
+
+        let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
         currentStudents = allStudents.filter(std => {
             let classMatch = (std[classKey] === className);
             let termMatch = (std.term === selectedTerm || (!std.term && selectedTerm === activeTerm)); 
             let yearMatch = (std.academicYear === selectedYear || (!std.academicYear && selectedYear === activeYear));
             return classMatch && termMatch && yearMatch;
         });
-        loadDailyData();
+        loadDailyData(isReadOnly);
     }
 
-    async function loadDailyData() {
+    async function loadDailyData(isReadOnly = false) {
         const dateVal = document.getElementById('recordDate').value;
-        const selectedTerm = document.getElementById('termInput').value;
-        const selectedYear = document.getElementById('yearInput').value;
-        const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
-        
         const alertBox = document.getElementById('holidayAlert');
         const tableBox = document.getElementById('tableContainer');
         const tbody = document.getElementById('tableBody');
@@ -156,24 +145,25 @@
         }
 
         tbody.innerHTML = "<tr><td colspan='3'>⏳ กำลังโหลดข้อมูล...</td></tr>";
+        try {
+            const recordsSnapshot = await db.collection('MilkRecords').where('className', '==', className).where('date', '==', dateVal).get();
+            let savedRecords = {};
+            recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data().status; });
 
-        const recordsSnapshot = await db.collection('MilkRecords').where('className', '==', className).where('date', '==', dateVal).get();
-        let savedRecords = {};
-        recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data().status; });
-
-        tbody.innerHTML = "";
-        currentStudents.forEach((student, index) => {
-            const stuId = student.docId;
-            const isChecked = savedRecords[stuId] === true ? "checked" : "";
-            const disabledAttr = isReadOnly ? "disabled" : "";
-            tbody.innerHTML += `
-                <tr>
+            tbody.innerHTML = "";
+            currentStudents.forEach((student, index) => {
+                const stuId = student.docId;
+                const isChecked = savedRecords[stuId] === true ? "checked" : "";
+                const disabledAttr = isReadOnly ? "disabled" : "";
+                tbody.innerHTML += `<tr>
                     <td>${index + 1}</td>
                     <td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "-"}</b></td>
                     <td><input type="checkbox" id="cb_${stuId}" ${isChecked} ${disabledAttr} onchange="autoSaveMilk('${stuId}')"></td>
-                </tr>
-            `;
-        });
+                </tr>`;
+            });
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan='3' style='color:red;'>❌ โหลดล้มเหลว: ${e.message}</td></tr>`;
+        }
     }
 
     async function autoSaveMilk(studentId) {
@@ -228,7 +218,7 @@
             ws['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 15 }]; for (let i = 0; i < 31; i++) ws['!cols'].push({ wch: 4 });
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
             XLSX.writeFile(wb, `บันทึกดื่มนม_ชั้น${className.replace('/', '-')}_${thaiMonths[parseInt(mm)-1]}_${yearTh}.xlsx`);
-        } catch (e) { console.error(e); }
+        } catch (e) { console.error(e); alert("ข้อผิดพลาดในการโหลดข้อมูล"); }
     }
 </script>
 </body>
