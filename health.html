@@ -42,19 +42,14 @@
     <div class="settings-card">
         <div class="form-group">
             <label style="color:var(--primary-green);">ภาคเรียนที่</label>
-            <select id="termInput" onchange="filterStudents()">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-            </select>
+            <select id="termInput" onchange="filterStudents()"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
         </div>
         <div class="form-group">
             <label style="color:var(--primary-green);">ปีการศึกษา (พ.ศ.)</label>
             <select id="yearInput" onchange="filterStudents()">
-                <option value="2569" selected>2569</option>
-                <option value="2570">2570</option>
-                <option value="2571">2571</option>
-                <option value="2572">2572</option>
-                <option value="2573">2573</option>
-                <option value="2574">2574</option>
+                <option value="2569" selected>2569</option><option value="2570">2570</option>
+                <option value="2571">2571</option><option value="2572">2572</option>
+                <option value="2573">2573</option><option value="2574">2574</option>
             </select>
         </div>
         <div class="form-group">
@@ -70,7 +65,7 @@
         <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" readonly style="background:#f5f5f5; color:#888;"></div>
     </div>
 
-    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล)</div>
+    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล แจ้งแอดมินเพื่อปลดล็อก)</div>
 
     <div class="table-wrapper">
         <table id="healthTable">
@@ -94,6 +89,7 @@
 <script src="firebase.js"></script>
 <script>
     let allStudents = []; let currentStudents = [];
+    let isClassUnlocked = false; 
     const className = sessionStorage.getItem("currentClass");
     const activeTerm = sessionStorage.getItem('activeTerm') || "1";
     const activeYear = sessionStorage.getItem('activeYear') || "2569";
@@ -108,17 +104,21 @@
         if (loggedInUser) document.getElementById("teacherInput").value = JSON.parse(loggedInUser).name;
 
         try {
+            // โหลดสิทธิ์ปลดล็อก
+            const unlockSnap = await db.collection('Settings').doc('UnlockConfig').get();
+            if (unlockSnap.exists && unlockSnap.data().classes) {
+                isClassUnlocked = unlockSnap.data().classes.includes(className);
+            }
+
             const snapshot = await db.collection('Students').get();
             snapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
             filterStudents();
-        } catch (error) { console.error(error); alert("เชื่อมต่อฐานข้อมูลล้มเหลว"); }
+        } catch (error) { console.error(error); }
     };
 
     function filterStudents() {
         const selectedTerm = document.getElementById('termInput').value;
         const selectedYear = document.getElementById('yearInput').value;
-        const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
-        document.getElementById('readOnlyBanner').style.display = isReadOnly ? "block" : "none";
 
         let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
         currentStudents = allStudents.filter(std => {
@@ -127,13 +127,42 @@
             let yearMatch = (std.academicYear === selectedYear || (!std.academicYear && selectedYear === activeYear));
             return classMatch && termMatch && yearMatch;
         });
-        loadHealthData(isReadOnly);
+        loadHealthData();
     }
 
-    async function loadHealthData(isReadOnly) {
+    async function loadHealthData() {
         const month = document.getElementById('monthSelect').value;
-        const year = document.getElementById('yearInput').value;
+        const selectedYearVal = document.getElementById('yearInput').value;
+        const selectedTerm = document.getElementById('termInput').value;
+        const banner = document.getElementById('readOnlyBanner');
         const tbody = document.getElementById("tableBody");
+
+        // ตรวจสอบว่าเดือนที่เลือก "ผ่านไปแล้ว" หรือยัง (อิงตามปฏิทินจริง)
+        const monthMap = {"มกราคม":1, "กุมภาพันธ์":2, "มีนาคม":3, "เมษายน":4, "พฤษภาคม":5, "มิถุนายน":6, "กรกฎาคม":7, "สิงหาคม":8, "กันยายน":9, "ตุลาคม":10, "พฤศจิกายน":11, "ธันวาคม":12};
+        let selM = monthMap[month];
+        let calYear = parseInt(selectedYearVal) - 543;
+        if (selM <= 3) calYear += 1; // ม.ค.-มี.ค. ข้ามไปอีกปีปฏิทิน
+        let selectedDateVal = calYear * 100 + selM;
+        
+        let currentM = new Date().getMonth() + 1;
+        let currentY = new Date().getFullYear();
+        let currentDateVal = currentY * 100 + currentM;
+
+        let isPastMonth = (selectedDateVal < currentDateVal);
+        let isReadOnly = (selectedTerm !== activeTerm || selectedYearVal !== activeYear || isPastMonth);
+
+        if (isClassUnlocked) {
+            isReadOnly = false;
+            banner.style.display = "block";
+            banner.style.backgroundColor = "#E8F5E9"; banner.style.color = "#2E7D32"; banner.style.borderColor = "#81C784";
+            banner.innerText = "🟢 แอดมินปลดล็อกให้ห้องนี้สามารถแก้ไขข้อมูลย้อนหลังได้";
+        } else if (isReadOnly) {
+            banner.style.display = "block";
+            banner.style.backgroundColor = "#FFF3E0"; banner.style.color = "#E65100"; banner.style.borderColor = "#FFB74D";
+            banner.innerText = "⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไข แจ้งแอดมินเพื่อปลดล็อก)";
+        } else {
+            banner.style.display = "none";
+        }
         
         if (currentStudents.length === 0) {
             tbody.innerHTML = "<tr><td colspan='9' style='padding:20px; color:red;'>ไม่มีข้อมูลนักเรียนในเทอม/ปีที่เลือก</td></tr>"; return;
@@ -142,7 +171,7 @@
         tbody.innerHTML = "<tr><td colspan='9'>⏳ กำลังโหลดข้อมูล...</td></tr>";
 
         try {
-            const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', className).where('month', '==', month).where('year', '==', year).get();
+            const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', className).where('month', '==', month).where('year', '==', selectedYearVal).get();
             let savedRecords = {};
             recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data(); });
 
@@ -166,9 +195,7 @@
                 tbody.appendChild(tr);
                 if(savedW && savedH) updateNutritionUI(stuId, student['เพศ'], savedW, savedH);
             });
-        } catch (e) {
-            tbody.innerHTML = `<tr><td colspan='9' style='color:red;'>❌ โหลดล้มเหลว: ${e.message}</td></tr>`;
-        }
+        } catch (e) { tbody.innerHTML = `<tr><td colspan='9' style='color:red;'>❌ โหลดข้อมูลไม่สำเร็จ: ${e.message}</td></tr>`; }
     }
 
     async function autoSaveHealth(studentId, gender) {
