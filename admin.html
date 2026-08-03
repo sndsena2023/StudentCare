@@ -39,21 +39,35 @@
             </select>
             <label style="font-weight: 600;">ปีการศึกษา (พ.ศ.):</label>
             <select id="sysYear" style="max-width: 150px; font-weight: bold; color: #2E7D32;">
-                <option value="2569" selected>2569</option>
-                <option value="2570">2570</option>
-                <option value="2571">2571</option>
-                <option value="2572">2572</option>
-                <option value="2573">2573</option>
-                <option value="2574">2574</option>
+                <option value="2569" selected>2569</option><option value="2570">2570</option>
+                <option value="2571">2571</option><option value="2572">2572</option>
+                <option value="2573">2573</option><option value="2574">2574</option>
             </select>
         </div>
         <button onclick="saveSystemSettings()" style="background-color: #2E7D32;">💾 บันทึกการตั้งค่าระบบ</button>
         <div id="status-sys" class="status-msg"></div>
-        <p style="font-size: 13px; color: #555; margin-bottom: 0; margin-top: 10px;">* ข้อมูลที่นำเข้าด้านล่างจะถูกประทับตราด้วยเทอม/ปีนี้</p>
+    </div>
+
+    <!-- ส่วนที่ 2: ระบบปลดล็อกย้อนหลัง -->
+    <div class="card" style="background: #FFF3E0; border-color: #FFCC80;">
+        <h4 style="color: #E65100;">🔐 2. ระบบปลดล็อกแก้ไขย้อนหลัง (รายห้อง)</h4>
+        <p style="font-size: 13px; color: #555;">ครูจะไม่สามารถแก้ข้อมูลวัน/เดือนที่ผ่านมาแล้วได้ ยกเว้นจะปลดล็อกให้ชั่วคราว</p>
+        <div class="form-group">
+            <select id="unlockClassSelect">
+                <option value="">⏳ กำลังโหลดห้องเรียน...</option>
+            </select>
+        </div>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="toggleUnlock(true)" style="background-color: #43A047; flex:1;">🔓 ปลดล็อกให้ห้องนี้</button>
+            <button onclick="toggleUnlock(false)" style="background-color: #E53935; flex:1;">🔒 ล็อกตามปกติ</button>
+        </div>
+        <p style="margin-top: 15px; font-weight: bold; color: #E65100; font-size: 14px;">
+            📌 ห้องที่กำลังปลดล็อกอยู่: <br><span id="unlockedList" style="color: #333; font-weight:normal;">-</span>
+        </p>
     </div>
 
     <div class="card">
-        <h4>🗓️ 2. กำหนดวันหยุดพิเศษ</h4>
+        <h4>🗓️ 3. กำหนดวันหยุดพิเศษ</h4>
         <div class="form-group">
             <input type="date" id="holidayDate">
             <input type="text" id="holidayName" placeholder="ชื่อวันหยุด (เช่น วันแม่, ชดเชย)">
@@ -63,14 +77,14 @@
     </div>
 
     <div class="card">
-        <h4>👨‍🏫 3. ฐานข้อมูลครูประจำชั้น</h4>
+        <h4>👨‍🏫 4. ฐานข้อมูลครูประจำชั้น</h4>
         <textarea id="teacherData" class="paste-area" placeholder="วางข้อมูล... (รหัสประจำตัว | ชื่อ-สกุล | ชั้นเรียน)"></textarea>
         <button onclick="importData('teacher')">บันทึกข้อมูลครู</button>
         <div id="status-teacher" class="status-msg"></div>
     </div>
 
     <div class="card">
-        <h4>👦👧 4. ฐานข้อมูลนักเรียน</h4>
+        <h4>👦👧 5. ฐานข้อมูลนักเรียน</h4>
         <textarea id="studentData" class="paste-area" placeholder="วางข้อมูล... (เลขที่ | รหัสประจำตัว | ชื่อ-สกุล | เพศ | วันเกิด | ชั้นเรียน)"></textarea>
         <button onclick="importData('student')">บันทึกข้อมูลนักเรียน</button>
         <div id="status-student" class="status-msg"></div>
