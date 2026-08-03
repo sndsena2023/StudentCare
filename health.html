@@ -27,6 +27,7 @@
         th:nth-child(2) { background-color: var(--primary-green); color: white; z-index: 3;}
         .input-hw { width: 70px; padding: 8px; border: 2px solid #E0E0E0; border-radius: 8px; text-align: center; outline: none; font-family: 'Sarabun', sans-serif;}
         .input-hw:disabled { background-color: #f0f0f0; cursor: not-allowed; border: 1px solid #eee; }
+        .readonly-banner { background: #FFF3E0; color: #E65100; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #FFB74D; text-align: center; margin-bottom: 20px; display: none; }
         .badge { padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; min-width: 80px;}
         .status-normal { background: #E8F5E9; color: #2E7D32; } .status-warning { background: #FFF3E0; color: #E65100; } .status-danger { background: #FFEBEE; color: #C62828; } .status-empty { background: #F5F5F5; color: #9E9E9E; }
         #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
@@ -42,24 +43,23 @@
         <div class="form-group">
             <label style="color:var(--primary-green);">ภาคเรียนที่</label>
             <select id="termInput" onchange="filterStudents()">
-                <option value="1">1</option>
-                <option value="2">2</option>
-                <option value="3">3</option>
+                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
             </select>
         </div>
         <div class="form-group">
             <label style="color:var(--primary-green);">ปีการศึกษา (พ.ศ.)</label>
             <select id="yearInput" onchange="filterStudents()">
-                <option value="2569">2569</option>
+                <option value="2569" selected>2569</option>
                 <option value="2570">2570</option>
                 <option value="2571">2571</option>
                 <option value="2572">2572</option>
                 <option value="2573">2573</option>
+                <option value="2574">2574</option>
             </select>
         </div>
         <div class="form-group">
             <label>ประจำเดือน</label>
-            <select id="monthSelect" onchange="loadHealthData(false)">
+            <select id="monthSelect" onchange="filterStudents()">
                 <option value="พฤษภาคม">พฤษภาคม</option><option value="มิถุนายน">มิถุนายน</option>
                 <option value="กรกฎาคม">กรกฎาคม</option><option value="สิงหาคม">สิงหาคม</option>
                 <option value="กันยายน">กันยายน</option><option value="ตุลาคม">ตุลาคม</option>
@@ -69,6 +69,8 @@
         </div>
         <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" readonly style="background:#f5f5f5; color:#888;"></div>
     </div>
+
+    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล)</div>
 
     <div class="table-wrapper">
         <table id="healthTable">
@@ -91,11 +93,10 @@
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
 <script>
-    let allStudents = [];
-    let currentStudents = [];
+    let allStudents = []; let currentStudents = [];
     const className = sessionStorage.getItem("currentClass");
     const activeTerm = sessionStorage.getItem('activeTerm') || "1";
-    const activeYear = sessionStorage.getItem('activeYear') || "2567";
+    const activeYear = sessionStorage.getItem('activeYear') || "2569";
 
     window.onload = async () => {
         if (!className) return window.location.href = "index.html";
@@ -110,23 +111,22 @@
             const snapshot = await db.collection('Students').get();
             snapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
             filterStudents();
-        } catch (error) { console.error(error); }
+        } catch (error) { console.error(error); alert("เชื่อมต่อฐานข้อมูลล้มเหลว"); }
     };
 
     function filterStudents() {
         const selectedTerm = document.getElementById('termInput').value;
         const selectedYear = document.getElementById('yearInput').value;
         const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
+        document.getElementById('readOnlyBanner').style.display = isReadOnly ? "block" : "none";
 
         let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
-        
         currentStudents = allStudents.filter(std => {
             let classMatch = (std[classKey] === className);
             let termMatch = (std.term === selectedTerm || (!std.term && selectedTerm === activeTerm));
             let yearMatch = (std.academicYear === selectedYear || (!std.academicYear && selectedYear === activeYear));
             return classMatch && termMatch && yearMatch;
         });
-
         loadHealthData(isReadOnly);
     }
 
@@ -141,30 +141,34 @@
 
         tbody.innerHTML = "<tr><td colspan='9'>⏳ กำลังโหลดข้อมูล...</td></tr>";
 
-        const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', className).where('month', '==', month).where('year', '==', year).get();
-        let savedRecords = {};
-        recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data(); });
+        try {
+            const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', className).where('month', '==', month).where('year', '==', year).get();
+            let savedRecords = {};
+            recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data(); });
 
-        tbody.innerHTML = "";
-        currentStudents.forEach((student, index) => {
-            const stuId = student.docId;
-            const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
-            const savedW = savedRecords[stuId] ? savedRecords[stuId].weight : "";
-            const savedH = savedRecords[stuId] ? savedRecords[stuId].height : "";
-            const disabledAttr = isReadOnly ? "disabled" : "";
+            tbody.innerHTML = "";
+            currentStudents.forEach((student, index) => {
+                const stuId = student.docId;
+                const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
+                const savedW = savedRecords[stuId] ? savedRecords[stuId].weight : "";
+                const savedH = savedRecords[stuId] ? savedRecords[stuId].height : "";
+                const disabledAttr = isReadOnly ? "disabled" : "";
 
-            const tr = document.createElement("tr");
-            tr.innerHTML = `
-                <td>${index + 1}</td>
-                <td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || ""}</b></td>
-                <td>${student['เพศ'] || "-"}</td><td>${age.y}</td><td>${age.m}</td>
-                <td><input type="number" class="input-hw" id="w_${stuId}" value="${savedW}" step="0.1" ${disabledAttr} onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
-                <td><input type="number" class="input-hw" id="h_${stuId}" value="${savedH}" step="0.1" ${disabledAttr} onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
-                <td><span class="badge status-empty" id="badge_wh_${stuId}">รอข้อมูล</span></td><td><span class="badge status-empty" id="badge_ha_${stuId}">รอข้อมูล</span></td>
-            `;
-            tbody.appendChild(tr);
-            if(savedW && savedH) updateNutritionUI(stuId, student['เพศ'], savedW, savedH);
-        });
+                const tr = document.createElement("tr");
+                tr.innerHTML = `
+                    <td>${index + 1}</td>
+                    <td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || ""}</b></td>
+                    <td>${student['เพศ'] || "-"}</td><td>${age.y}</td><td>${age.m}</td>
+                    <td><input type="number" class="input-hw" id="w_${stuId}" value="${savedW}" step="0.1" ${disabledAttr} onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
+                    <td><input type="number" class="input-hw" id="h_${stuId}" value="${savedH}" step="0.1" ${disabledAttr} onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
+                    <td><span class="badge status-empty" id="badge_wh_${stuId}">รอข้อมูล</span></td><td><span class="badge status-empty" id="badge_ha_${stuId}">รอข้อมูล</span></td>
+                `;
+                tbody.appendChild(tr);
+                if(savedW && savedH) updateNutritionUI(stuId, student['เพศ'], savedW, savedH);
+            });
+        } catch (e) {
+            tbody.innerHTML = `<tr><td colspan='9' style='color:red;'>❌ โหลดล้มเหลว: ${e.message}</td></tr>`;
+        }
     }
 
     async function autoSaveHealth(studentId, gender) {
