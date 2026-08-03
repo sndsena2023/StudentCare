@@ -12,19 +12,16 @@
         .container { max-width: 1200px; margin: auto; background: white; padding: 30px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.1); }
         .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px; flex-wrap: wrap; gap: 15px; border-bottom: 2px solid var(--border-color); padding-bottom: 15px;}
         .header h2 { margin: 0; color: #1565C0; font-weight: 700; font-size: 24px; display: flex; align-items: center; gap: 10px;}
-        
         .settings-card { background: #F3E5F5; border: 1px solid #CE93D8; padding: 20px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; align-items: end; }
         .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 8px; color: #4A148C; }
-        select, input[type="number"] { width: 100%; padding: 12px; border: 1px solid #BA68C8; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; font-size: 15px; }
-        select:focus, input:focus { border-color: var(--primary-purple); box-shadow: 0 0 5px rgba(106, 27, 154, 0.3);}
-        
+        select { width: 100%; padding: 12px; border: 1px solid #BA68C8; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; font-size: 15px; }
+        select:focus { border-color: var(--primary-purple); box-shadow: 0 0 5px rgba(106, 27, 154, 0.3);}
         .btn-group { display: flex; gap: 10px; flex-direction: column; }
         button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 10px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; display: flex; align-items: center; justify-content: center; gap: 8px;}
         button:active { transform: scale(0.98); }
         .btn-load { background: #1565C0; color: white; height: 45px;}
         .btn-export-single { background: var(--primary-green); color: white; }
         .btn-export-all { background: #E65100; color: white; }
-
         .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; margin-top: 20px;}
         table { border-collapse: collapse; width: 100%; min-width: 900px; }
         th, td { padding: 12px 10px; text-align: center; font-size: 14px; border: 1px solid var(--border-color); }
@@ -40,48 +37,42 @@
         <h2>📊 ระบบรายงานภาพรวม (สำหรับเจ้าหน้าที่)</h2>
     </div>
 
-    <!-- ส่วนตัวกรองข้อมูล -->
     <div class="settings-card">
         <div class="form-group">
-            <label>1. เลือกเดือนที่ต้องการดู</label>
+            <label>1. ปีการศึกษา (พ.ศ.)</label>
+            <select id="yearInput">
+                <option value="2569" selected>2569</option>
+                <option value="2570">2570</option>
+                <option value="2571">2571</option>
+                <option value="2572">2572</option>
+                <option value="2573">2573</option>
+                <option value="2574">2574</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>2. เลือกเดือนที่ต้องการดู</label>
             <select id="monthSelect">
                 <option value="พฤษภาคม">พฤษภาคม</option><option value="มิถุนายน">มิถุนายน</option>
                 <option value="กรกฎาคม">กรกฎาคม</option><option value="สิงหาคม">สิงหาคม</option>
                 <option value="กันยายน">กันยายน</option><option value="ตุลาคม">ตุลาคม</option>
                 <option value="พฤศจิกายน">พฤศจิกายน</option><option value="ธันวาคม">ธันวาคม</option>
-                <option value="มกราคม">มกราคม (ปีถัดไป)</option><option value="กุมภาพันธ์">กุมภาพันธ์ (ปีถัดไป)</option>
-                <option value="มีนาคม">มีนาคม (ปีถัดไป)</option>
+                <option value="มกราคม">มกราคม</option><option value="กุมภาพันธ์">กุมภาพันธ์</option><option value="มีนาคม">มีนาคม</option>
             </select>
-        </div>
-        <div class="form-group">
-            <label>2. ปีการศึกษา (พ.ศ.)</label>
-            <!-- ค้นหาบรรทัด <input type="number" id="yearInput" value="2567"> แล้วแก้เป็นโค้ดนี้ครับ -->
-<select id="yearInput">
-    <option value="2569" selected>2569</option>
-    <option value="2570">2570</option>
-    <option value="2571">2571</option>
-    <option value="2572">2572</option>
-    <option value="2573">2573</option>
-</select>
         </div>
         <div class="form-group">
             <label>3. เลือกชั้นเรียน</label>
-            <select id="classSelect">
-                <option value="">⏳ กำลังโหลดห้องเรียน...</option>
-            </select>
+            <select id="classSelect"><option value="">⏳ กำลังโหลดห้องเรียน...</option></select>
         </div>
         <div class="btn-group">
             <button class="btn-load" onclick="loadReportData()">🔍 ดึงข้อมูล</button>
         </div>
     </div>
 
-    <!-- ปุ่ม Export -->
     <div style="display: flex; gap: 15px; margin-bottom: 15px; flex-wrap: wrap;">
         <button class="btn-export-single" onclick="exportSingleClass()">💾 ดาวน์โหลด Excel (เฉพาะห้องนี้)</button>
         <button class="btn-export-all" onclick="exportAllClasses()">📁 ดาวน์โหลด Excel (รวมทุกห้องในไฟล์เดียว)</button>
     </div>
 
-    <!-- ตารางแสดงผล -->
     <div class="table-wrapper">
         <table id="healthTable">
             <thead>
@@ -110,26 +101,18 @@
     window.onload = async () => {
         try {
             const snapshot = await db.collection('Students').get();
-            snapshot.forEach(doc => {
-                let data = doc.data(); data.docId = doc.id;
-                allStudents.push(data);
-            });
+            snapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
 
             if (allStudents.length > 0) {
                 const foundKey = Object.keys(allStudents[0]).find(k => k.includes("ชั้น") || k.includes("ห้อง"));
                 if(foundKey) classKeyName = foundKey;
                 
                 uniqueClasses = [...new Set(allStudents.map(std => std[classKeyName]).filter(Boolean))].sort();
-                
                 const classSelect = document.getElementById("classSelect");
                 classSelect.innerHTML = "";
-                uniqueClasses.forEach(cls => {
-                    classSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
-                });
+                uniqueClasses.forEach(cls => { classSelect.innerHTML += `<option value="${cls}">${cls}</option>`; });
             }
-        } catch (error) {
-            console.error(error); alert("เชื่อมต่อฐานข้อมูลล้มเหลว");
-        }
+        } catch (error) { console.error(error); alert("เชื่อมต่อฐานข้อมูลล้มเหลว"); }
     };
 
     async function loadReportData() {
@@ -139,14 +122,14 @@
         const tbody = document.getElementById("tableBody");
 
         if(!selectedClass) return alert("กรุณาเลือกชั้นเรียน");
-
         tbody.innerHTML = "<tr><td colspan='9'>⏳ กำลังดึงข้อมูลจาก Cloud...</td></tr>";
 
-        const currentStudents = allStudents.filter(std => std[classKeyName] === selectedClass);
-        const recordsSnapshot = await db.collection('HealthRecords')
-                                        .where('className', '==', selectedClass)
-                                        .where('month', '==', month)
-                                        .where('year', '==', year).get();
+        const currentStudents = allStudents.filter(std => std[classKeyName] === selectedClass && std.academicYear === year);
+        if(currentStudents.length === 0){
+             tbody.innerHTML = "<tr><td colspan='9' style='color:red;'>ไม่พบข้อมูลนักเรียนในปีการศึกษานี้</td></tr>"; return;
+        }
+
+        const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', selectedClass).where('month', '==', month).where('year', '==', year).get();
         let savedRecords = {};
         recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data(); });
 
@@ -156,26 +139,20 @@
             const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
             const w = savedRecords[stuId] ? savedRecords[stuId].weight : "-";
             const h = savedRecords[stuId] ? savedRecords[stuId].height : "-";
-
             let whHTML = `<span class="badge status-empty">รอข้อมูล</span>`;
             let haHTML = `<span class="badge status-empty">รอข้อมูล</span>`;
 
             if (w !== "-" && h !== "-") {
-                let health = analyzeHealth(student['เพศ'], w, h);
+                let health = analyzeHealth(w, h);
                 whHTML = `<span class="badge ${health.whClass}">${health.wh}</span>`;
                 haHTML = `<span class="badge ${health.haClass}">${health.ha}</span>`;
             }
-
-            tbody.innerHTML += `
-                <tr>
-                    <td>${index + 1}</td>
-                    <td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || ""}</b></td>
-                    <td>${student['เพศ'] || "-"}</td><td>${age.y}</td><td>${age.m}</td>
-                    <td style="font-weight:bold; color:#1565C0;">${w}</td>
-                    <td style="font-weight:bold; color:#1565C0;">${h}</td>
-                    <td>${whHTML}</td><td>${haHTML}</td>
-                </tr>
-            `;
+            tbody.innerHTML += `<tr>
+                <td>${index + 1}</td><td><b>${student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || ""}</b></td>
+                <td>${student['เพศ'] || "-"}</td><td>${age.y}</td><td>${age.m}</td>
+                <td style="font-weight:bold; color:#1565C0;">${w}</td><td style="font-weight:bold; color:#1565C0;">${h}</td>
+                <td>${whHTML}</td><td>${haHTML}</td>
+            </tr>`;
         });
     }
 
@@ -189,7 +166,7 @@
         return { y: ageY, m: ageM };
     }
 
-    function analyzeHealth(gender, weight, height) {
+    function analyzeHealth(weight, height) {
         let bmi = weight / ((height/100) * (height/100));
         let whResult = "สมส่วน"; let whClass = "status-normal"; let haResult = "สูงตามเกณฑ์"; let haClass = "status-normal";
         if (bmi < 15) { whResult = "ผอม"; whClass = "status-danger"; } else if (bmi < 16.5) { whResult = "ค่อนข้างผอม"; whClass = "status-warning"; } else if (bmi > 23) { whResult = "อ้วน"; whClass = "status-danger"; } else if (bmi > 20) { whResult = "เริ่มอ้วน"; whClass = "status-warning"; }
@@ -197,7 +174,6 @@
         return { wh: whResult, whClass: whClass, ha: haResult, haClass: haClass };
     }
 
-    // ฟังก์ชัน 1: ส่งออก Excel เฉพาะห้องที่กำลังดู
     function exportSingleClass() {
         const selectedClass = document.getElementById('classSelect').value;
         const month = document.getElementById('monthSelect').value;
@@ -205,101 +181,59 @@
         if(!selectedClass) return;
 
         const wb = XLSX.utils.book_new();
-        const wsData = buildSheetData(selectedClass, month, year);
-        const ws = XLSX.utils.aoa_to_sheet(wsData);
-        ws['!cols'] = [{wch: 8}, {wch: 30}, {wch: 6}, {wch: 8}, {wch: 10}, {wch: 8}, {wch: 8}];
-        for(let i=0; i<11; i++) ws['!cols'].push({wch: 10});
-        
-        XLSX.utils.book_append_sheet(wb, ws, `ชั้น ${selectedClass.replace('/', '-')}`);
-        XLSX.writeFile(wb, `รายงานโภชนาการ_${selectedClass.replace('/', '-')}_${month}.xlsx`);
-    }
-
-    // ฟังก์ชัน 2: ส่งออก Excel ทุกห้องในไฟล์เดียว (แยกชีต)
-    async function exportAllClasses() {
-        const month = document.getElementById('monthSelect').value;
-        const year = document.getElementById('yearInput').value;
-        
-        if(!confirm("ระบบจะทำการโหลดข้อมูลของนักเรียนทุกห้อง อาจใช้เวลาสักครู่ ต้องการดำเนินการต่อหรือไม่?")) return;
-
-        const wb = XLSX.utils.book_new();
-        
-        for (const cls of uniqueClasses) {
-            const wsData = await buildSheetDataAsync(cls, month, year);
-            const ws = XLSX.utils.aoa_to_sheet(wsData);
-            ws['!cols'] = [{wch: 8}, {wch: 30}, {wch: 6}, {wch: 8}, {wch: 10}, {wch: 8}, {wch: 8}];
-            for(let i=0; i<11; i++) ws['!cols'].push({wch: 10});
-            
-            // ป้องกันชื่อชีตมีอักขระห้ามใช้ (เช่น /)
-            let safeSheetName = cls.replace(/[/\\?*:[\]]/g, '-').substring(0, 31);
-            XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
-        }
-        
-        XLSX.writeFile(wb, `รายงานโภชนาการ_รวมทุกห้อง_${month}_${year}.xlsx`);
-    }
-
-    // Helper: สร้างข้อมูลของแต่ละชีต
-    async function buildSheetDataAsync(className, month, year) {
-        const currentStudents = allStudents.filter(std => std[classKeyName] === className);
-        const recordsSnapshot = await db.collection('HealthRecords')
-                                        .where('className', '==', className)
-                                        .where('month', '==', month)
-                                        .where('year', '==', year).get();
-        let savedRecords = {};
-        recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data(); });
-
-        let exportData = [
-            ["รายงานสรุปภาวะโภชนาการ", `ประจำเดือน ${month}`],
-            [`ชั้น ${className}`, `ปีการศึกษา ${year}`], [],
-            ["ลำดับที่", "ชื่อ - สกุล", "เพศ", "อายุ (ปี)", "อายุ (เดือน)", "น้ำหนัก", "ส่วนสูง", "ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน", "เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"]
-        ];
-
-        currentStudents.forEach((student, index) => {
-            const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
-            const w = savedRecords[student.docId] ? savedRecords[student.docId].weight : "";
-            const h = savedRecords[student.docId] ? savedRecords[student.docId].height : "";
-            
-            let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['เพศ'] || "", age.y, age.m, w, h];
-            
-            if (w && h) {
-                let health = analyzeHealth(student['เพศ'], w, h);
-                ["ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน"].forEach(opt => row.push(health.wh === opt ? "/" : ""));
-                ["เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"].forEach(opt => row.push(health.ha === opt ? "/" : ""));
-            } else {
-                for(let i=0; i<11; i++) row.push(""); // ปล่อยว่างถ้าไม่มีข้อมูล
-            }
-            exportData.push(row);
-        });
-        return exportData;
-    }
-
-    // สำหรับใช้ส่งออกแบบซิงโครนัส (ห้องเดียว)
-    function buildSheetData(className, month, year) {
-        // ดึงข้อมูลจากตารางที่แสดงผลอยู่ปัจจุบัน (เพื่อความรวดเร็ว)
-        let exportData = [
-            ["รายงานสรุปภาวะโภชนาการ", `ประจำเดือน ${month}`],
-            [`ชั้น ${className}`, `ปีการศึกษา ${year}`], [],
-            ["ลำดับที่", "ชื่อ - สกุล", "เพศ", "อายุ (ปี)", "อายุ (เดือน)", "น้ำหนัก", "ส่วนสูง", "ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน", "เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"]
-        ];
+        let exportData = [["รายงานสรุปภาวะโภชนาการ", `ประจำเดือน ${month}`], [`ชั้น ${selectedClass}`, `ปีการศึกษา ${year}`], [], ["ลำดับที่", "ชื่อ - สกุล", "เพศ", "อายุ (ปี)", "อายุ (เดือน)", "น้ำหนัก", "ส่วนสูง", "ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน", "เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"]];
 
         const rows = document.querySelectorAll("#tableBody tr");
         rows.forEach(tr => {
-            if (tr.cells.length < 9) return; // ข้ามแถว Loading
-            let cols = tr.cells;
-            let w = cols[5].innerText;
-            let h = cols[6].innerText;
-            
+            if (tr.cells.length < 9) return; 
+            let cols = tr.cells; let w = cols[5].innerText; let h = cols[6].innerText;
             let row = [cols[0].innerText, cols[1].innerText, cols[2].innerText, cols[3].innerText, cols[4].innerText, w !== "-" ? w : "", h !== "-" ? h : ""];
-            
             if (w !== "-" && h !== "-") {
                 let wh = cols[7].innerText; let ha = cols[8].innerText;
                 ["ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน"].forEach(opt => row.push(wh === opt ? "/" : ""));
                 ["เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"].forEach(opt => row.push(ha === opt ? "/" : ""));
-            } else {
-                for(let i=0; i<11; i++) row.push("");
-            }
+            } else { for(let i=0; i<11; i++) row.push(""); }
             exportData.push(row);
         });
-        return exportData;
+
+        const ws = XLSX.utils.aoa_to_sheet(exportData);
+        ws['!cols'] = [{wch: 8}, {wch: 30}, {wch: 6}, {wch: 8}, {wch: 10}, {wch: 8}, {wch: 8}]; for(let i=0; i<11; i++) ws['!cols'].push({wch: 10});
+        XLSX.utils.book_append_sheet(wb, ws, `ชั้น ${selectedClass.replace('/', '-')}`);
+        XLSX.writeFile(wb, `รายงานโภชนาการ_${selectedClass.replace('/', '-')}_${month}.xlsx`);
+    }
+
+    async function exportAllClasses() {
+        const month = document.getElementById('monthSelect').value;
+        const year = document.getElementById('yearInput').value;
+        if(!confirm("ระบบจะโหลดข้อมูลทุกห้อง อาจใช้เวลาสักครู่ ต้องการทำต่อหรือไม่?")) return;
+
+        const wb = XLSX.utils.book_new();
+        for (const cls of uniqueClasses) {
+            const currentStudents = allStudents.filter(std => std[classKeyName] === cls && std.academicYear === year);
+            if(currentStudents.length === 0) continue;
+            
+            const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', cls).where('month', '==', month).where('year', '==', year).get();
+            let savedRecords = {}; recordsSnapshot.forEach(doc => { savedRecords[doc.data().studentId] = doc.data(); });
+            let exportData = [["รายงานสรุปภาวะโภชนาการ", `ประจำเดือน ${month}`], [`ชั้น ${cls}`, `ปีการศึกษา ${year}`], [], ["ลำดับที่", "ชื่อ - สกุล", "เพศ", "อายุ (ปี)", "อายุ (เดือน)", "น้ำหนัก", "ส่วนสูง", "ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน", "เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"]];
+
+            currentStudents.forEach((student, index) => {
+                const age = calculateAge(student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || "");
+                const w = savedRecords[student.docId] ? savedRecords[student.docId].weight : "";
+                const h = savedRecords[student.docId] ? savedRecords[student.docId].height : "";
+                let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['เพศ'] || "", age.y, age.m, w, h];
+                if (w && h) {
+                    let health = analyzeHealth(w, h);
+                    ["ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน"].forEach(opt => row.push(health.wh === opt ? "/" : ""));
+                    ["เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"].forEach(opt => row.push(health.ha === opt ? "/" : ""));
+                } else { for(let i=0; i<11; i++) row.push(""); }
+                exportData.push(row);
+            });
+            const ws = XLSX.utils.aoa_to_sheet(exportData);
+            ws['!cols'] = [{wch: 8}, {wch: 30}, {wch: 6}, {wch: 8}, {wch: 10}, {wch: 8}, {wch: 8}]; for(let i=0; i<11; i++) ws['!cols'].push({wch: 10});
+            let safeSheetName = cls.replace(/[/\\?*:[\]]/g, '-').substring(0, 31);
+            XLSX.utils.book_append_sheet(wb, ws, safeSheetName);
+        }
+        XLSX.writeFile(wb, `รายงานโภชนาการ_รวมทุกห้อง_${month}_${year}.xlsx`);
     }
 </script>
 </body>
