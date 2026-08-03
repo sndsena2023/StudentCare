@@ -1,9 +1,12 @@
-// ไฟล์: app.js
-
 let currentTeacherDocId = null; 
 let currentTeacherData = null;  
 
-if ('serviceWorker' in navigator) { window.addEventListener('load', () => console.log('PWA Ready')); }
+// เริ่มต้น Service Worker เพื่อให้แอปติดตั้งลงมือถือได้
+if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js')
+      .then(() => console.log('✅ Service Worker ลงทะเบียนสำเร็จ'))
+      .catch((err) => console.log('❌ Service Worker ลงทะเบียนล้มเหลว', err));
+}
 
 document.addEventListener("DOMContentLoaded", () => {
     const loggedInUser = sessionStorage.getItem('loggedInTeacher');
@@ -30,12 +33,10 @@ async function login() {
         errorMsg.style.display = "block"; errorMsg.style.color = "blue";
         errorMsg.innerText = "⏳ กำลังตรวจสอบข้อมูล...";
 
-        // 1. โหลดการตั้งค่าระบบ (เทอมปัจจุบัน)
-        let activeTerm = "1", activeYear = "2567";
+        let activeTerm = "1", activeYear = "2569";
         const configDoc = await db.collection('Settings').doc('ActiveConfig').get();
         if (configDoc.exists) { activeTerm = configDoc.data().term; activeYear = configDoc.data().year; }
 
-        // 2. ค้นหาข้อมูลครูเฉพาะเทอมปัจจุบัน
         const snapshot = await db.collection('Teachers').get();
         let foundDoc = null;
 
@@ -44,7 +45,6 @@ async function login() {
             const idKey = Object.keys(teacher).find(k => k.includes("รหัส"));
             const dbId = idKey && teacher[idKey] ? String(teacher[idKey]).trim().toUpperCase() : "";
             
-            // เช็ค ID และเทอมให้ตรงกับปัจจุบัน (ถ้าข้อมูลเก่าไม่มีเทอม ก็อนุโลมให้ผ่านได้)
             if (dbId === cleanUser) {
                 if (!teacher.term || (teacher.term === activeTerm && teacher.academicYear === activeYear)) {
                     foundDoc = { id: doc.id, data: teacher };
@@ -65,7 +65,6 @@ async function login() {
 
                 if (!currentTeacherData.className) { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ ไม่พบข้อมูลชั้นเรียน"; return; }
 
-                // บันทึกเทอมปัจจุบันลงระบบ ให้หน้าอื่นเรียกใช้ได้
                 sessionStorage.setItem('activeTerm', activeTerm);
                 sessionStorage.setItem('activeYear', activeYear);
 
@@ -73,9 +72,7 @@ async function login() {
                     document.getElementById('login-section').style.display = 'none';
                     document.getElementById('dashboard-section').style.display = 'none';
                     document.getElementById('change-pwd-section').style.display = 'block';
-                } else {
-                    proceedToDashboard();
-                }
+                } else { proceedToDashboard(); }
             } else { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ รหัสผ่านไม่ถูกต้อง"; }
         } else { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ ไม่พบรหัสผู้ใช้งาน หรือคุณไม่มีตารางในเทอมนี้"; }
     } catch (error) { errorMsg.style.color = "#E53935"; errorMsg.innerText = "❌ เกิดข้อผิดพลาดฐานข้อมูล"; console.error(error); }
@@ -119,7 +116,4 @@ function goTo(page) {
     if (page === 'health') window.location.href = "health.html";
 }
 
-function logout() {
-    sessionStorage.clear();
-    window.location.reload(); 
-}
+function logout() { sessionStorage.clear(); window.location.reload(); }
