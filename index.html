@@ -10,7 +10,7 @@
         :root { --primary-purple: #6A1B9A; --light-purple: #F3E5F5; --primary-green: #2E7D32; --light-green: #E8F5E9; --text-dark: #2C3E50; --text-muted: #7F8C8D; }
         body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #F3E5F5 0%, #E8F5E9 100%); background-attachment: fixed; color: var(--text-dark); margin: 0; padding: 20px; display: flex; justify-content: center; align-items: center; min-height: 100vh; box-sizing: border-box; }
         @keyframes slideUpFade { from { opacity: 0; transform: translateY(30px); } to { opacity: 1; transform: translateY(0); } }
-        .container { width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(106, 27, 154, 0.1); text-align: center; animation: slideUpFade 0.5s ease forwards; box-sizing: border-box; }
+        .container { width: 100%; max-width: 420px; background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(10px); padding: 40px 30px; border-radius: 24px; box-shadow: 0 15px 35px rgba(106, 27, 154, 0.1); text-align: center; animation: slideUpFade 0.5s ease forwards; box-sizing: border-box; position: relative;}
         .school-logo { width: 120px; height: auto; margin-bottom: 15px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
         .form-label { text-align: left; font-size: 14px; font-weight: 600; color: #555; margin-bottom: 5px; display: block;}
         input[type="text"], input[type="password"] { width: 100%; padding: 15px; border-radius: 14px; border: 2px solid #EEEEEE; font-size: 16px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s; margin-bottom: 15px; letter-spacing: 1px; text-align: center;}
@@ -28,9 +28,24 @@
         .btn-milk { background-color: var(--light-purple); color: var(--primary-purple); }
         .btn-health { background-color: var(--light-green); color: var(--primary-green); }
         .btn-logout { background-color: transparent; color: #E53935; text-decoration: underline; font-size: 14px; margin-top: 15px; border: none; cursor: pointer; }
+        
+        /* สไตล์สำหรับปุ่มลับ */
+        .secret-admin-btn {
+            position: fixed; 
+            bottom: 15px; 
+            right: 15px; 
+            font-size: 20px; 
+            opacity: 0.08; /* จางมากๆ แทบมองไม่เห็น */
+            cursor: pointer; 
+            z-index: 9999;
+            transition: 0.3s;
+        }
+        /* ถ้าแอดมินเอาเมาส์ไปชี้ จะสว่างขึ้นนิดนึงให้รู้ว่ากดได้ */
+        .secret-admin-btn:hover { opacity: 0.5; }
     </style>
 </head>
 <body>
+
 <div class="container">
     <div id="login-section">
         <img src="logo.png" alt="โลโก้โรงเรียน" class="school-logo" onerror="this.src='https://cdn-icons-png.flaticon.com/512/2966/2966327.png';">
@@ -65,6 +80,11 @@
         <button class="action-btn btn-health" onclick="goTo('health')"><span style="font-size: 20px;">⚖️</span> บันทึกน้ำหนัก-ส่วนสูง</button>
         <button class="btn-logout" onclick="logout()">ออกจากระบบ</button>
     </div>
+</div>
+
+<!-- ปุ่มลับเข้าหน้า Admin (ซ่อนอยู่ที่มุมขวาล่างสุดของหน้าจอ) -->
+<div class="secret-admin-btn" onclick="window.location.href='admin.html'" title="Admin Mode">
+    ⚙️
 </div>
 
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-app-compat.js"></script>
