@@ -21,13 +21,34 @@
         button:hover { background-color: #1B5E20; transform: translateY(-2px); }
         .status-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
         .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
-        .form-group input, .form-group select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; flex: 1; min-width: 150px; outline: none;}
+        .form-group input, .form-group select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; flex: 1; min-width: 150px; outline: none; box-sizing: border-box;}
         .form-group input:focus, .form-group select:focus { border-color: var(--primary-purple); }
     </style>
 </head>
 <body>
-<div class="container">
-    <a href="index.html" class="nav-link">← กลับหน้าหลัก</a>
+
+<!-- 1. หน้าล็อกอินสำหรับ Admin -->
+<div class="container" id="login-section" style="max-width: 400px; margin-top: 50px;">
+    <h2 style="color: var(--primary-purple);">🔐 เข้าสู่ระบบ Admin</h2>
+    <p class="subtitle">เฉพาะผู้ดูแลระบบเท่านั้น</p>
+    <div class="form-group" style="flex-direction: column; gap: 15px;">
+        <input type="text" id="adminUser" placeholder="ชื่อผู้ใช้ (Username)" style="width: 100%; text-align: center;">
+        <input type="password" id="adminPass" placeholder="รหัสผ่าน (Password)" style="width: 100%; text-align: center;">
+    </div>
+    <button onclick="checkAdminLogin()" style="background-color: var(--primary-purple); margin-top: 10px;">เข้าสู่ระบบ</button>
+    <div id="admin-login-error" class="status-msg" style="color: #E53935;"></div>
+    <div style="text-align: center; margin-top: 20px;">
+        <a href="index.html" style="color: #888; text-decoration: none; font-size: 14px; border-bottom: 1px solid #ccc;">← กลับหน้าหลักของครู</a>
+    </div>
+</div>
+
+<!-- 2. หน้าจัดการระบบ (จะแสดงเมื่อล็อกอินผ่าน) -->
+<div class="container" id="admin-section" style="display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
+        <a href="index.html" class="nav-link" style="margin-bottom: 0;">← กลับหน้าหลัก</a>
+        <button onclick="adminLogout()" style="width: auto; background-color: #FFEBEE; color: #C62828; padding: 8px 16px; border-radius: 20px; font-size: 14px;">🚪 ออกจากระบบ</button>
+    </div>
+    
     <h2>⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
     
     <div class="card" style="background: #E8F5E9; border-color: #A5D6A7;">
@@ -48,7 +69,6 @@
         <div id="status-sys" class="status-msg"></div>
     </div>
 
-    <!-- ส่วนที่ 2: ระบบปลดล็อกย้อนหลัง -->
     <div class="card" style="background: #FFF3E0; border-color: #FFCC80;">
         <h4 style="color: #E65100;">🔐 2. ระบบปลดล็อกแก้ไขย้อนหลัง (รายห้อง)</h4>
         <p style="font-size: 13px; color: #555;">ครูจะไม่สามารถแก้ข้อมูลวัน/เดือนที่ผ่านมาแล้วได้ ยกเว้นจะปลดล็อกให้ชั่วคราว</p>
@@ -95,5 +115,36 @@
 <script src="https://www.gstatic.com/firebasejs/10.11.0/firebase-firestore-compat.js"></script>
 <script src="firebase.js"></script>
 <script src="admin.js"></script>
+<script>
+    // ตรวจสอบสถานะว่าแอดมินเคยล็อกอินไว้แล้วหรือยัง
+    window.addEventListener('DOMContentLoaded', () => {
+        if(sessionStorage.getItem("loggedInAdmin") === "true") {
+            document.getElementById('login-section').style.display = "none";
+            document.getElementById('admin-section').style.display = "block";
+        }
+    });
+
+    function checkAdminLogin() {
+        const user = document.getElementById('adminUser').value.trim();
+        const pass = document.getElementById('adminPass').value.trim();
+        
+        // 📌 แก้ไข Username และ Password ของ Admin ได้ที่ 2 บรรทัดนี้ครับ
+        const ADMIN_USER = "admin";
+        const ADMIN_PASS = "admin1234";
+
+        if (user === ADMIN_USER && pass === ADMIN_PASS) {
+            sessionStorage.setItem("loggedInAdmin", "true");
+            document.getElementById('login-section').style.display = "none";
+            document.getElementById('admin-section').style.display = "block";
+        } else {
+            document.getElementById('admin-login-error').innerText = "❌ Username หรือ Password ไม่ถูกต้อง";
+        }
+    }
+
+    function adminLogout() {
+        sessionStorage.removeItem("loggedInAdmin");
+        window.location.reload();
+    }
+</script>
 </body>
 </html>
