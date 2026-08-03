@@ -40,25 +40,21 @@
     <div class="settings-card">
         <div class="form-group">
             <label style="color:var(--primary-purple);">ภาคเรียนที่</label>
-            <select id="termInput" onchange="filterStudents()">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-            </select>
+            <select id="termInput" onchange="filterStudents()"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
         </div>
         <div class="form-group">
             <label style="color:var(--primary-purple);">ปีการศึกษา (พ.ศ.)</label>
             <select id="yearInput" onchange="filterStudents()">
-                <option value="2569" selected>2569</option>
-                <option value="2570">2570</option>
-                <option value="2571">2571</option>
-                <option value="2572">2572</option>
-                <option value="2573">2573</option>
-                <option value="2574">2574</option>
+                <option value="2569" selected>2569</option><option value="2570">2570</option>
+                <option value="2571">2571</option><option value="2572">2572</option>
+                <option value="2573">2573</option><option value="2574">2574</option>
             </select>
         </div>
-        <div class="form-group"><label>เลือกวันที่บันทึก</label><input type="date" id="recordDate" onchange="loadDailyData()"></div>
+        <div class="form-group"><label>เลือกวันที่บันทึก</label><input type="date" id="recordDate" onchange="filterStudents()"></div>
     </div>
 
-    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล)</div>
+    <!-- ป้ายแจ้งสถานะการล็อก/ปลดล็อก -->
+    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล แจ้งแอดมินเพื่อปลดล็อก)</div>
     <div id="holidayAlert" class="holiday-alert">⛔ วันนี้เป็นวันหยุด: <span id="holidayName"></span></div>
 
     <div class="table-wrapper" id="tableContainer">
@@ -82,6 +78,7 @@
 <script src="firebase.js"></script>
 <script>
     let allStudents = []; let currentStudents = []; let currentHolidays = {};
+    let isClassUnlocked = false; // ตัวแปรเก็บสถานะการปลดล็อกของห้องนี้
     const className = sessionStorage.getItem("currentClass");
     const activeTerm = sessionStorage.getItem('activeTerm') || "1";
     const activeYear = sessionStorage.getItem('activeYear') || "2569";
@@ -96,10 +93,17 @@
         document.getElementById('recordDate').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
         try {
+            // โหลดสิทธิ์การปลดล็อก
+            const unlockSnap = await db.collection('Settings').doc('UnlockConfig').get();
+            if (unlockSnap.exists && unlockSnap.data().classes) {
+                isClassUnlocked = unlockSnap.data().classes.includes(className);
+            }
+
             const holSnapshot = await db.collection('Holidays').get();
             holSnapshot.forEach(doc => { currentHolidays[doc.id] = doc.data().name; });
             const stuSnapshot = await db.collection('Students').get();
             stuSnapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
+            
             filterStudents(); 
         } catch (error) { console.error(error); }
     };
@@ -108,9 +112,6 @@
         const selectedTerm = document.getElementById('termInput').value;
         const selectedYear = document.getElementById('yearInput').value;
         
-        const isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear);
-        document.getElementById('readOnlyBanner').style.display = isReadOnly ? "block" : "none";
-
         let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
         currentStudents = allStudents.filter(std => {
             let classMatch = (std[classKey] === className);
@@ -118,18 +119,43 @@
             let yearMatch = (std.academicYear === selectedYear || (!std.academicYear && selectedYear === activeYear));
             return classMatch && termMatch && yearMatch;
         });
-        loadDailyData(isReadOnly);
+        loadDailyData();
     }
 
-    async function loadDailyData(isReadOnly = false) {
+    async function loadDailyData() {
         const dateVal = document.getElementById('recordDate').value;
+        const selectedTerm = document.getElementById('termInput').value;
+        const selectedYear = document.getElementById('yearInput').value;
+        
         const alertBox = document.getElementById('holidayAlert');
         const tableBox = document.getElementById('tableContainer');
         const tbody = document.getElementById('tableBody');
+        const banner = document.getElementById('readOnlyBanner');
 
         if(!dateVal) return;
-        const dayOfWeek = new Date(dateVal).getDay();
 
+        // เช็คว่าวันย้อนหลังหรือไม่
+        const today = new Date();
+        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const isPastDate = (dateVal < todayStr);
+
+        let isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear || isPastDate);
+
+        // นำสิทธิ์แอดมินมาหักล้าง
+        if (isClassUnlocked) {
+            isReadOnly = false;
+            banner.style.display = "block";
+            banner.style.backgroundColor = "#E8F5E9"; banner.style.color = "#2E7D32"; banner.style.borderColor = "#81C784";
+            banner.innerText = "🟢 แอดมินปลดล็อกให้ห้องนี้สามารถแก้ไขข้อมูลย้อนหลังได้";
+        } else if (isReadOnly) {
+            banner.style.display = "block";
+            banner.style.backgroundColor = "#FFF3E0"; banner.style.color = "#E65100"; banner.style.borderColor = "#FFB74D";
+            banner.innerText = "⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไข แจ้งแอดมินเพื่อปลดล็อก)";
+        } else {
+            banner.style.display = "none";
+        }
+
+        const dayOfWeek = new Date(dateVal).getDay();
         let isHoliday = false; let holidayText = "";
         if (dayOfWeek === 0 || dayOfWeek === 6) { isHoliday = true; holidayText = "เสาร์-อาทิตย์"; } 
         else if (currentHolidays[dateVal]) { isHoliday = true; holidayText = currentHolidays[dateVal]; }
@@ -161,9 +187,7 @@
                     <td><input type="checkbox" id="cb_${stuId}" ${isChecked} ${disabledAttr} onchange="autoSaveMilk('${stuId}')"></td>
                 </tr>`;
             });
-        } catch (e) {
-            tbody.innerHTML = `<tr><td colspan='3' style='color:red;'>❌ โหลดล้มเหลว: ${e.message}</td></tr>`;
-        }
+        } catch (e) { tbody.innerHTML = `<tr><td colspan='3' style='color:red;'>❌ โหลดล้มเหลว</td></tr>`; }
     }
 
     async function autoSaveMilk(studentId) {
@@ -181,10 +205,8 @@
         const term = document.getElementById('termInput').value;
         const yearTh = document.getElementById('yearInput').value;
         if(!dateVal) return;
-        
         const yyyy = dateVal.substring(0, 4); const mm = dateVal.substring(5, 7);
         const thaiMonths = ["มกราคม", "กุมภาพันธ์", "มีนาคม", "เมษายน", "พฤษภาคม", "มิถุนายน", "กรกฎาคม", "สิงหาคม", "กันยายน", "ตุลาคม", "พฤศจิกายน", "ธันวาคม"];
-        
         try {
             const recordsSnapshot = await db.collection('MilkRecords').where('className', '==', className).get();
             let monthRecords = {};
@@ -195,30 +217,24 @@
                     monthRecords[data.studentId][data.date] = true;
                 }
             });
-
             let exportData = [["แบบฟอร์มบันทึกข้อมูลการดื่มนม"], [`ประจำเดือน ${thaiMonths[parseInt(mm)-1]}`, "", `โรงเรียน เสนาบดี`, "", `ภาคเรียนที่ ${term}`, "", `ปีการศึกษา ${yearTh}`, "", `ชั้น ${className}`]];
             let headers = ["ลำดับที่", "ชื่อ-สกุล", "วัน/เดือน/ปี เกิด"]; for (let i = 1; i <= 31; i++) headers.push(i);
             exportData.push(headers);
-
             currentStudents.forEach((student, index) => {
                 let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['วันเกิด'] || student['วัน/เดือน/ปีเกิด'] || ""];
                 for (let i = 1; i <= 31; i++) {
                     const testDateStr = `${yyyy}-${mm}-${String(i).padStart(2, '0')}`;
                     const dObj = new Date(testDateStr);
-                    if (dObj.getMonth()+1 !== parseInt(mm) || dObj.getDay()===0 || dObj.getDay()===6 || currentHolidays[testDateStr]) {
-                        row.push(""); 
-                    } else {
-                        row.push((monthRecords[student.docId] && monthRecords[student.docId][testDateStr]) ? "/" : "");
-                    }
+                    if (dObj.getMonth()+1 !== parseInt(mm) || dObj.getDay()===0 || dObj.getDay()===6 || currentHolidays[testDateStr]) { row.push(""); } 
+                    else { row.push((monthRecords[student.docId] && monthRecords[student.docId][testDateStr]) ? "/" : ""); }
                 }
                 exportData.push(row);
             });
-
             const ws = XLSX.utils.aoa_to_sheet(exportData);
             ws['!cols'] = [{ wch: 8 }, { wch: 30 }, { wch: 15 }]; for (let i = 0; i < 31; i++) ws['!cols'].push({ wch: 4 });
             const wb = XLSX.utils.book_new(); XLSX.utils.book_append_sheet(wb, ws, "Sheet1");
             XLSX.writeFile(wb, `บันทึกดื่มนม_ชั้น${className.replace('/', '-')}_${thaiMonths[parseInt(mm)-1]}_${yearTh}.xlsx`);
-        } catch (e) { console.error(e); alert("ข้อผิดพลาดในการโหลดข้อมูล"); }
+        } catch (e) { alert("ข้อผิดพลาดในการโหลดข้อมูล"); }
     }
 </script>
 </body>
