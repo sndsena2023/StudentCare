@@ -21,16 +21,16 @@
         .btn-export { background: var(--primary-purple); color: white; width: 100%; margin-top: 20px; padding: 16px; font-size: 18px;}
         
         .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; }
-        table { border-collapse: collapse; width: 100%; min-width: 1000px; }
+        table { border-collapse: collapse; width: 100%; min-width: 1050px; }
         th, td { padding: 8px 5px; text-align: center; font-size: 14px; border: 1px solid var(--border-color); }
         th { background-color: var(--primary-green); color: white; font-weight: 600; }
-        th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: #ffffff; z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.05); text-align: left; min-width: 150px; }
+        th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: #ffffff; z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.05); text-align: left; min-width: 160px; }
         th:nth-child(2) { background-color: var(--primary-green); color: white; z-index: 3;}
         
-        .input-hw { width: 60px; padding: 8px; border: 2px solid #E0E0E0; border-radius: 8px; text-align: center; outline: none; font-family: 'Sarabun', sans-serif;}
+        .input-hw { width: 55px; padding: 8px; border: 2px solid #E0E0E0; border-radius: 8px; text-align: center; outline: none; font-family: 'Sarabun', sans-serif;}
         .input-hw:disabled { background-color: #f0f0f0; cursor: not-allowed; border: 1px solid #eee; }
         .readonly-banner { background: #FFF3E0; color: #E65100; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #FFB74D; text-align: center; margin-bottom: 20px; display: none; }
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; min-width: 80px;}
+        .badge { padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; min-width: 90px;}
         .status-normal { background: #E8F5E9; color: #2E7D32; } .status-warning { background: #FFF3E0; color: #E65100; } .status-danger { background: #FFEBEE; color: #C62828; } .status-empty { background: #F5F5F5; color: #9E9E9E; }
         #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
     </style>
@@ -69,24 +69,26 @@
 
     <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล แจ้งแอดมินเพื่อปลดล็อก)</div>
 
+    <!-- ล็อกความกว้างของช่องให้เป๊ะๆ -->
     <div class="table-wrapper">
         <table id="healthTable">
             <thead>
                 <tr>
-                    <th rowspan="2" style="width: 40px;">ที่</th>
-                    <th rowspan="2">ชื่อ - สกุล</th>
-                    <th rowspan="2" style="width: 40px;">เพศ</th>
-                    <th colspan="2" style="width: 80px;">อายุ</th>
-                    <th rowspan="2" style="width: 75px;">น้ำหนัก<br>(กก.)</th>
-                    <th rowspan="2" style="width: 75px;">ส่วนสูง<br>(ซม.)</th>
-                    <th rowspan="2" style="width: 75px;">รอบศีรษะ<br>(ซม.)</th>
+                    <th rowspan="2" style="width: 40px; min-width: 40px; max-width: 40px;">ที่</th>
+                    <th rowspan="2" style="min-width: 160px;">ชื่อ - สกุล</th>
+                    <th rowspan="2" style="width: 45px; min-width: 45px; max-width: 45px;">เพศ</th>
+                    <th colspan="2">อายุ</th>
+                    <th rowspan="2" style="width: 75px; min-width: 75px; max-width: 75px;">น้ำหนัก<br>(กก.)</th>
+                    <th rowspan="2" style="width: 75px; min-width: 75px; max-width: 75px;">ส่วนสูง<br>(ซม.)</th>
+                    <th rowspan="2" style="width: 75px; min-width: 75px; max-width: 75px;">รอบศีรษะ<br>(ซม.)</th>
                     <th colspan="2">สรุปภาวะโภชนาการอัตโนมัติ</th>
                 </tr>
                 <tr>
-                    <th style="width: 40px;">ปี</th>
-                    <th style="width: 40px;">เดือน</th>
-                    <th>น้ำหนักตามเกณฑ์ส่วนสูง</th>
-                    <th>ส่วนสูงตามเกณฑ์อายุ</th>
+                    <!-- ล็อกช่อง ปี และ เดือน ให้เท่ากันเป๊ะที่ 50px -->
+                    <th style="width: 50px; min-width: 50px; max-width: 50px;">ปี</th>
+                    <th style="width: 50px; min-width: 50px; max-width: 50px;">เดือน</th>
+                    <th style="min-width: 140px;">น้ำหนักตามเกณฑ์ส่วนสูง</th>
+                    <th style="min-width: 140px;">ส่วนสูงตามเกณฑ์อายุ</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
