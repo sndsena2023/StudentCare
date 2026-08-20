@@ -9,8 +9,8 @@
 </head>
 <body>
 <div class="container">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
-        <h2 class="header-title" style="margin: 0;">🥛 บันทึกดื่มนม <span style="color: var(--secondary); margin-left:8px;" id="displayClass"></span></h2>
+    <div class="page-header">
+        <h2 class="header-title">🥛 บันทึกดื่มนม <span style="color: var(--secondary);" id="displayClass"></span></h2>
         <button class="btn btn-outline" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
     </div>
     
@@ -130,7 +130,7 @@
 
         alertBox.style.display = "none"; tableBox.style.display = "block";
         if (currentStudents.length === 0) {
-            tbody.innerHTML = "<tr><td colspan='3' style='padding:20px; color:red;'>ไม่มีข้อมูลนักเรียนในเทอม/ปีที่เลือก</td></tr>"; return;
+            tbody.innerHTML = "<tr><td colspan='3' style='padding:20px; color:var(--danger);'>ไม่มีข้อมูลนักเรียนในเทอม/ปีที่เลือก</td></tr>"; return;
         }
 
         tbody.innerHTML = "<tr><td colspan='3'>⏳ กำลังโหลดข้อมูล...</td></tr>";
@@ -150,7 +150,7 @@
                     <td><input type="checkbox" id="cb_${stuId}" ${isChecked} ${disabledAttr} onchange="autoSaveMilk('${stuId}')"></td>
                 </tr>`;
             });
-        } catch (e) { tbody.innerHTML = `<tr><td colspan='3' style='color:red;'>❌ โหลดล้มเหลว</td></tr>`; }
+        } catch (e) { tbody.innerHTML = `<tr><td colspan='3' style='color:var(--danger);'>❌ โหลดล้มเหลว</td></tr>`; }
     }
 
     async function autoSaveMilk(studentId) {

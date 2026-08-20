@@ -9,8 +9,9 @@
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h2 class="header-title" style="color: var(--secondary);">📊 ระบบรายงานภาพรวม (เจ้าหน้าที่)</h2>
+    <div class="page-header">
+        <h2 class="header-title" style="color: var(--secondary);">📊 ระบบรายงานภาพรวม</h2>
+        <button class="btn btn-outline" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
     </div>
 
     <div class="card grid-3" style="background: #F0FDFA; border-color: #BBF7D0;">
@@ -103,7 +104,7 @@
         tbody.innerHTML = "<tr><td colspan='10'>⏳ กำลังดึงข้อมูลจาก Cloud...</td></tr>";
 
         const currentStudents = allStudents.filter(std => std[classKeyName] === selectedClass && std.academicYear === year);
-        if(currentStudents.length === 0){ tbody.innerHTML = "<tr><td colspan='10' style='color:red;'>ไม่พบข้อมูลนักเรียนในปีการศึกษานี้</td></tr>"; return; }
+        if(currentStudents.length === 0){ tbody.innerHTML = "<tr><td colspan='10' style='color:var(--danger);'>ไม่พบข้อมูลนักเรียนในปีการศึกษานี้</td></tr>"; return; }
 
         const recordsSnapshot = await db.collection('HealthRecords').where('className', '==', selectedClass).where('month', '==', month).where('year', '==', year).get();
         let savedRecords = {};

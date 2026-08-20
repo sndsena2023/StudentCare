@@ -2,7 +2,7 @@
 <html lang="th">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>ส่วนผู้ดูแลระบบ (Admin)</title>
     <link rel="stylesheet" href="style.css">
 </head>
@@ -20,11 +20,13 @@
 </div>
 
 <div class="container" id="admin-section" style="max-width: 800px; display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-        <a href="index.html" class="btn btn-outline">← กลับหน้าหลัก</a>
-        <button onclick="adminLogout()" class="btn btn-danger">🚪 ออกจากระบบ</button>
+    <div class="page-header">
+        <h2 class="header-title">⚙️ ตั้งค่าระบบส่วนกลาง</h2>
+        <div style="display: flex; gap: 10px;">
+            <button onclick="window.location.href='index.html'" class="btn btn-outline">← กลับ</button>
+            <button onclick="adminLogout()" class="btn btn-danger">🚪 ออกจากระบบ</button>
+        </div>
     </div>
-    <h2 class="header-title">⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
     
     <div class="card" style="background: #F0FDFA; border-color: #BBF7D0;">
         <h4 style="color: var(--secondary);">📌 1. ตั้งค่า "ภาคเรียนปัจจุบัน"</h4>

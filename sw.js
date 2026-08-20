@@ -6,5 +6,5 @@ self.addEventListener('activate', (e) => {
     console.log('[Service Worker] พร้อมใช้งาน');
 });
 self.addEventListener('fetch', (e) => {
-    // ปล่อยผ่านเพื่อให้โหลดข้อมูลออนไลน์ได้ปกติ (จำเป็นต้องมีให้ครบเงื่อนไข PWA)
+    // ปล่อยผ่านเพื่อให้โหลดข้อมูลออนไลน์ได้ปกติ
 });
