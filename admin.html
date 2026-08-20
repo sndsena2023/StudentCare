@@ -4,110 +4,83 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ส่วนผู้ดูแลระบบ (Admin)</title>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary-purple: #6A1B9A; --primary-green: #2E7D32; --bg-color: #F8F9FA; --text-dark: #333333; }
-        body { font-family: 'Sarabun', sans-serif; background-color: var(--bg-color); color: var(--text-dark); margin: 0; padding: 30px 15px; }
-        .container { max-width: 650px; margin: auto; background: white; padding: 40px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.05); }
-        .nav-link { display: inline-block; margin-bottom: 25px; text-decoration: none; color: var(--primary-purple); font-weight: 600; background: #F3E5F5; padding: 8px 16px; border-radius: 20px; transition: 0.3s;}
-        .nav-link:hover { background: var(--primary-purple); color: white; }
-        h2 { text-align: center; color: var(--text-dark); margin-top: 0; font-size: 24px;}
-        p.subtitle { text-align: center; color: #888; margin-bottom: 25px; font-size: 15px;}
-        .card { border: 1px solid #EBEBEB; border-radius: 16px; padding: 25px; margin-bottom: 25px; transition: 0.3s; }
-        .card h4 { margin-top: 0; color: var(--primary-purple); font-size: 18px; margin-bottom: 15px;}
-        .paste-area { width: 100%; height: 100px; padding: 15px; box-sizing: border-box; border: 2px dashed #CCCCCC; border-radius: 12px; margin-bottom: 15px; font-family: 'Sarabun', sans-serif; font-size: 14px; background: #FAFAFA; outline: none; resize: vertical; }
-        .paste-area:focus { border-color: var(--primary-purple); background: white; }
-        button { font-family: 'Sarabun', sans-serif; width: 100%; padding: 14px; border: none; border-radius: 10px; font-size: 16px; font-weight: 600; cursor: pointer; transition: 0.3s; background-color: var(--primary-green); color: white; }
-        button:hover { background-color: #1B5E20; transform: translateY(-2px); }
-        .status-msg { margin-top: 15px; text-align: center; font-weight: 600; font-size: 14px; }
-        .form-group { display: flex; gap: 10px; margin-bottom: 15px; flex-wrap: wrap; align-items: center;}
-        .form-group input, .form-group select { padding: 12px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun'; flex: 1; min-width: 150px; outline: none; box-sizing: border-box;}
-        .form-group input:focus, .form-group select:focus { border-color: var(--primary-purple); }
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-<!-- 1. หน้าล็อกอินสำหรับ Admin -->
-<div class="container" id="login-section" style="max-width: 400px; margin-top: 50px;">
-    <h2 style="color: var(--primary-purple);">🔐 เข้าสู่ระบบ Admin</h2>
-    <p class="subtitle">เฉพาะผู้ดูแลระบบเท่านั้น</p>
-    <div class="form-group" style="flex-direction: column; gap: 15px;">
-        <input type="text" id="adminUser" placeholder="ชื่อผู้ใช้ (Username)" style="width: 100%; text-align: center;">
-        <input type="password" id="adminPass" placeholder="รหัสผ่าน (Password)" style="width: 100%; text-align: center;">
-    </div>
-    <button onclick="checkAdminLogin()" style="background-color: var(--primary-purple); margin-top: 10px;">เข้าสู่ระบบ</button>
-    <div id="admin-login-error" class="status-msg" style="color: #E53935;"></div>
-    <div style="text-align: center; margin-top: 20px;">
-        <a href="index.html" style="color: #888; text-decoration: none; font-size: 14px; border-bottom: 1px solid #ccc;">← กลับหน้าหลักของครู</a>
+<div class="container" id="login-section" style="max-width: 400px; margin-top: 10vh;">
+    <div class="card" style="text-align: center;">
+        <h2 style="color: var(--primary);">🔐 เข้าสู่ระบบ Admin</h2>
+        <p style="color: var(--text-muted); margin-bottom: 24px;">เฉพาะผู้ดูแลระบบเท่านั้น</p>
+        <div class="form-group"><input type="text" id="adminUser" placeholder="Username" style="text-align: center;"></div>
+        <div class="form-group"><input type="password" id="adminPass" placeholder="Password" style="text-align: center;"></div>
+        <button onclick="checkAdminLogin()" class="btn btn-primary btn-block" style="margin-top: 10px;">เข้าสู่ระบบ</button>
+        <div id="admin-login-error" style="color: var(--danger); font-size: 14px; margin-top: 15px;"></div>
+        <div style="margin-top: 24px;"><a href="index.html" class="btn btn-outline">← กลับหน้าหลักของครู</a></div>
     </div>
 </div>
 
-<!-- 2. หน้าจัดการระบบ (จะแสดงเมื่อล็อกอินผ่าน) -->
-<div class="container" id="admin-section" style="display: none;">
-    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 25px;">
-        <a href="index.html" class="nav-link" style="margin-bottom: 0;">← กลับหน้าหลัก</a>
-        <button onclick="adminLogout()" style="width: auto; background-color: #FFEBEE; color: #C62828; padding: 8px 16px; border-radius: 20px; font-size: 14px;">🚪 ออกจากระบบ</button>
+<div class="container" id="admin-section" style="max-width: 800px; display: none;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+        <a href="index.html" class="btn btn-outline">← กลับหน้าหลัก</a>
+        <button onclick="adminLogout()" class="btn btn-danger">🚪 ออกจากระบบ</button>
     </div>
+    <h2 class="header-title">⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
     
-    <h2>⚙️ ตั้งค่าระบบส่วนกลาง (Admin)</h2>
-    
-    <div class="card" style="background: #E8F5E9; border-color: #A5D6A7;">
-        <h4 style="color: #2E7D32;">📌 1. ตั้งค่า "ภาคเรียนปัจจุบัน" ของระบบ</h4>
-        <div class="form-group">
-            <label style="font-weight: 600;">ภาคเรียนที่:</label>
-            <select id="sysTerm" style="max-width: 100px; font-weight: bold; color: #2E7D32;">
-                <option value="1">1</option><option value="2">2</option><option value="3">3</option>
-            </select>
-            <label style="font-weight: 600;">ปีการศึกษา (พ.ศ.):</label>
-            <select id="sysYear" style="max-width: 150px; font-weight: bold; color: #2E7D32;">
-                <option value="2569" selected>2569</option><option value="2570">2570</option>
-                <option value="2571">2571</option><option value="2572">2572</option>
-                <option value="2573">2573</option><option value="2574">2574</option>
-            </select>
+    <div class="card" style="background: #F0FDFA; border-color: #BBF7D0;">
+        <h4 style="color: var(--secondary);">📌 1. ตั้งค่า "ภาคเรียนปัจจุบัน"</h4>
+        <div class="grid-2">
+            <div class="form-group"><label>ภาคเรียนที่</label><select id="sysTerm"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
+            <div class="form-group"><label>ปีการศึกษา (พ.ศ.)</label>
+                <select id="sysYear">
+                    <option value="2569" selected>2569</option><option value="2570">2570</option>
+                    <option value="2571">2571</option><option value="2572">2572</option>
+                    <option value="2573">2573</option><option value="2574">2574</option>
+                </select>
+            </div>
         </div>
-        <button onclick="saveSystemSettings()" style="background-color: #2E7D32;">💾 บันทึกการตั้งค่าระบบ</button>
-        <div id="status-sys" class="status-msg"></div>
+        <button onclick="saveSystemSettings()" class="btn btn-success">💾 บันทึกการตั้งค่าระบบ</button>
+        <div id="status-sys" style="margin-top: 10px; font-weight: 500;"></div>
     </div>
 
-    <div class="card" style="background: #FFF3E0; border-color: #FFCC80;">
-        <h4 style="color: #E65100;">🔐 2. ระบบปลดล็อกแก้ไขย้อนหลัง (รายห้อง)</h4>
-        <p style="font-size: 13px; color: #555;">ครูจะไม่สามารถแก้ข้อมูลวัน/เดือนที่ผ่านมาแล้วได้ ยกเว้นจะปลดล็อกให้ชั่วคราว</p>
-        <div class="form-group">
-            <select id="unlockClassSelect">
-                <option value="">⏳ กำลังโหลดห้องเรียน...</option>
-            </select>
+    <div class="card" style="background: #FFFBEB; border-color: #FDE68A;">
+        <h4 style="color: var(--warning);">🔐 2. ปลดล็อกแก้ไขย้อนหลัง (รายห้อง)</h4>
+        <div class="form-group"><select id="unlockClassSelect"><option value="">⏳ โหลดห้องเรียน...</option></select></div>
+        <div class="grid-2">
+            <button onclick="toggleUnlock(true)" class="btn btn-success">🔓 ปลดล็อกให้ห้องนี้</button>
+            <button onclick="toggleUnlock(false)" class="btn btn-danger">🔒 ล็อกตามปกติ</button>
         </div>
-        <div style="display: flex; gap: 10px;">
-            <button onclick="toggleUnlock(true)" style="background-color: #43A047; flex:1;">🔓 ปลดล็อกให้ห้องนี้</button>
-            <button onclick="toggleUnlock(false)" style="background-color: #E53935; flex:1;">🔒 ล็อกตามปกติ</button>
-        </div>
-        <p style="margin-top: 15px; font-weight: bold; color: #E65100; font-size: 14px;">
-            📌 ห้องที่กำลังปลดล็อกอยู่: <br><span id="unlockedList" style="color: #333; font-weight:normal;">-</span>
-        </p>
+        <p style="margin-top: 16px; font-size: 14px; font-weight: 500;">📌 ห้องที่กำลังปลดล็อกอยู่: <span id="unlockedList" style="color: var(--primary); font-weight: bold;">-</span></p>
     </div>
 
     <div class="card">
         <h4>🗓️ 3. กำหนดวันหยุดพิเศษ</h4>
-        <div class="form-group">
-            <input type="date" id="holidayDate">
-            <input type="text" id="holidayName" placeholder="ชื่อวันหยุด (เช่น วันแม่, ชดเชย)">
+        <div class="grid-2">
+            <div class="form-group"><input type="date" id="holidayDate"></div>
+            <div class="form-group"><input type="text" id="holidayName" placeholder="ชื่อวันหยุด"></div>
         </div>
-        <button onclick="saveHoliday()" style="background-color: #E65100;">บันทึกวันหยุดพิเศษ</button>
-        <div id="status-holiday" class="status-msg"></div>
+        <button onclick="saveHoliday()" class="btn btn-primary">บันทึกวันหยุดพิเศษ</button>
+        <div id="status-holiday" style="margin-top: 10px; font-weight: 500;"></div>
     </div>
 
     <div class="card">
-        <h4>👨‍🏫 4. ฐานข้อมูลครูประจำชั้น</h4>
-        <textarea id="teacherData" class="paste-area" placeholder="วางข้อมูล... (รหัสประจำตัว | ชื่อ-สกุล | ชั้นเรียน)"></textarea>
-        <button onclick="importData('teacher')">บันทึกข้อมูลครู</button>
-        <div id="status-teacher" class="status-msg"></div>
+        <h4>👨‍🏫 4. นำเข้าฐานข้อมูลครู</h4>
+        <div class="form-group"><textarea id="teacherData" rows="4" placeholder="รหัสประจำตัว | ชื่อ-สกุล | ชั้นเรียน"></textarea></div>
+        <button onclick="importData('teacher')" class="btn btn-primary">นำเข้าข้อมูลครู</button>
+        <div id="status-teacher" style="margin-top: 10px; font-weight: 500;"></div>
     </div>
 
     <div class="card">
-        <h4>👦👧 5. ฐานข้อมูลนักเรียน</h4>
-        <textarea id="studentData" class="paste-area" placeholder="วางข้อมูล... (เลขที่ | รหัสประจำตัว | ชื่อ-สกุล | เพศ | วันเกิด | ชั้นเรียน)"></textarea>
-        <button onclick="importData('student')">บันทึกข้อมูลนักเรียน</button>
-        <div id="status-student" class="status-msg"></div>
+        <h4>👦👧 5. นำเข้าฐานข้อมูลนักเรียน</h4>
+        <div class="form-group"><textarea id="studentData" rows="4" placeholder="เลขที่ | รหัสประจำตัว | ชื่อ-สกุล | เพศ | วันเกิด | ชั้นเรียน"></textarea></div>
+        <button onclick="importData('student')" class="btn btn-primary">นำเข้าข้อมูลนักเรียน</button>
+        <div id="status-student" style="margin-top: 10px; font-weight: 500;"></div>
+    </div>
+
+    <div class="card" style="background: #FEF2F2; border-color: #FECACA;">
+        <h4 style="color: var(--danger);">🗑️ โซนอันตราย: ระบบล้างข้อมูลประจำปี</h4>
+        <p style="font-size: 14px; color: var(--text-muted);">ฟังก์ชันนี้ใช้สำหรับลบข้อมูลของปีการศึกษาเก่าทิ้งเพื่อเริ่มปีใหม่ (ไม่สามารถกู้คืนได้)</p>
+        <button onclick="clearYearData()" class="btn btn-danger btn-block">⚠️ ล้างข้อมูลปีการศึกษาเก่า</button>
+        <div id="status-clear" class="alert" style="margin-top: 15px;"></div>
     </div>
 </div>
 
@@ -116,35 +89,23 @@
 <script src="firebase.js"></script>
 <script src="admin.js"></script>
 <script>
-    // ตรวจสอบสถานะว่าแอดมินเคยล็อกอินไว้แล้วหรือยัง
     window.addEventListener('DOMContentLoaded', () => {
         if(sessionStorage.getItem("loggedInAdmin") === "true") {
             document.getElementById('login-section').style.display = "none";
             document.getElementById('admin-section').style.display = "block";
         }
     });
-
     function checkAdminLogin() {
         const user = document.getElementById('adminUser').value.trim();
         const pass = document.getElementById('adminPass').value.trim();
-        
-        // 📌 แก้ไข Username และ Password ของ Admin ได้ที่ 2 บรรทัดนี้ครับ
-        const ADMIN_USER = "Boss";
-        const ADMIN_PASS = "boss2499";
-
+        const ADMIN_USER = "admin"; const ADMIN_PASS = "admin1234";
         if (user === ADMIN_USER && pass === ADMIN_PASS) {
             sessionStorage.setItem("loggedInAdmin", "true");
             document.getElementById('login-section').style.display = "none";
             document.getElementById('admin-section').style.display = "block";
-        } else {
-            document.getElementById('admin-login-error').innerText = "❌ Username หรือ Password ไม่ถูกต้อง";
-        }
+        } else { document.getElementById('admin-login-error').innerText = "❌ ข้อมูลไม่ถูกต้อง"; }
     }
-
-    function adminLogout() {
-        sessionStorage.removeItem("loggedInAdmin");
-        window.location.reload();
-    }
+    function adminLogout() { sessionStorage.removeItem("loggedInAdmin"); window.location.reload(); }
 </script>
 </body>
 </html>

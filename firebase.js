@@ -6,9 +6,6 @@ const firebaseConfig = {
     messagingSenderId: "104140224696",
     appId: "1:104140224696:web:f31be03111fbc889c5dc4d"
 };
-
-if (!firebase.apps.length) {
-    firebase.initializeApp(firebaseConfig);
-}
+if (!firebase.apps.length) { firebase.initializeApp(firebaseConfig); }
 const db = firebase.firestore();
 console.log("🔥 เชื่อมต่อฐานข้อมูล Firebase สำเร็จ!");

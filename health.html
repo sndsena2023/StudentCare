@@ -5,49 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>บันทึกน้ำหนัก - ส่วนสูง</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary-purple: #6A1B9A; --primary-green: #2E7D32; --border-color: #EEEEEE; }
-        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #F3E5F5 0%, #E8F5E9 100%); margin: 0; padding: 15px; min-height: 100vh; }
-        .container { max-width: 1200px; margin: auto; background: rgba(255, 255, 255, 0.98); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(0,0,0,0.08); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
-        .header h2 { margin: 0; color: var(--primary-green); font-weight: 700; font-size: 22px;}
-        .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
-        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555; }
-        select, input[type="text"] { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; }
-        select:focus, input:focus { border-color: var(--primary-green); }
-        button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
-        .btn-export { background: var(--primary-purple); color: white; width: 100%; margin-top: 20px; padding: 16px; font-size: 18px;}
-        
-        .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; }
-        table { border-collapse: collapse; width: 100%; min-width: 1050px; }
-        th, td { padding: 8px 5px; text-align: center; font-size: 14px; border: 1px solid var(--border-color); }
-        th { background-color: var(--primary-green); color: white; font-weight: 600; }
-        th:nth-child(2), td:nth-child(2) { position: sticky; left: 0; background: #ffffff; z-index: 2; box-shadow: 2px 0 5px rgba(0,0,0,0.05); text-align: left; min-width: 160px; }
-        th:nth-child(2) { background-color: var(--primary-green); color: white; z-index: 3;}
-        
-        .input-hw { width: 55px; padding: 8px; border: 2px solid #E0E0E0; border-radius: 8px; text-align: center; outline: none; font-family: 'Sarabun', sans-serif;}
-        .input-hw:disabled { background-color: #f0f0f0; cursor: not-allowed; border: 1px solid #eee; }
-        .readonly-banner { background: #FFF3E0; color: #E65100; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #FFB74D; text-align: center; margin-bottom: 20px; display: none; }
-        .badge { padding: 5px 10px; border-radius: 20px; font-size: 13px; font-weight: bold; display: inline-block; min-width: 90px;}
-        .status-normal { background: #E8F5E9; color: #2E7D32; } .status-warning { background: #FFF3E0; color: #E65100; } .status-danger { background: #FFEBEE; color: #C62828; } .status-empty { background: #F5F5F5; color: #9E9E9E; }
-        #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h2>⚖️ บันทึกน้ำหนัก-ส่วนสูง ชั้น <span id="displayClass" style="color:var(--primary-purple);"></span></h2>
-        <button class="btn-back" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
+        <h2 class="header-title" style="margin: 0;">⚖️ บันทึกสุขภาพ <span style="color: var(--primary); margin-left:8px;" id="displayClass"></span></h2>
+        <button class="btn btn-outline" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
     </div>
-    <div class="settings-card">
+
+    <div class="card grid-3">
+        <div class="form-group"><label>ภาคเรียนที่</label><select id="termInput" onchange="filterStudents()"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
         <div class="form-group">
-            <label style="color:var(--primary-green);">ภาคเรียนที่</label>
-            <select id="termInput" onchange="filterStudents()"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-        </div>
-        <div class="form-group">
-            <label style="color:var(--primary-green);">ปีการศึกษา (พ.ศ.)</label>
+            <label>ปีการศึกษา (พ.ศ.)</label>
             <select id="yearInput" onchange="filterStudents()">
                 <option value="2569" selected>2569</option><option value="2570">2570</option>
                 <option value="2571">2571</option><option value="2572">2572</option>
@@ -64,12 +34,11 @@
                 <option value="มกราคม">มกราคม</option><option value="กุมภาพันธ์">กุมภาพันธ์</option><option value="มีนาคม">มีนาคม</option>
             </select>
         </div>
-        <div class="form-group"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" readonly style="background:#f5f5f5; color:#888;"></div>
+        <div class="form-group" style="grid-column: 1 / -1;"><label>ครูประจำชั้น</label><input type="text" id="teacherInput" readonly style="background:#f9fafb; color:var(--text-muted);"></div>
     </div>
 
-    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล แจ้งแอดมินเพื่อปลดล็อก)</div>
+    <div id="readOnlyBanner" class="alert alert-warning">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล แจ้งแอดมินเพื่อปลดล็อก)</div>
 
-    <!-- ล็อกความกว้างของช่องให้เป๊ะๆ -->
     <div class="table-wrapper">
         <table id="healthTable">
             <thead>
@@ -84,7 +53,6 @@
                     <th colspan="2">สรุปภาวะโภชนาการอัตโนมัติ</th>
                 </tr>
                 <tr>
-                    <!-- ล็อกช่อง ปี และ เดือน ให้เท่ากันเป๊ะที่ 50px -->
                     <th style="width: 50px; min-width: 50px; max-width: 50px;">ปี</th>
                     <th style="width: 50px; min-width: 50px; max-width: 50px;">เดือน</th>
                     <th style="min-width: 140px;">น้ำหนักตามเกณฑ์ส่วนสูง</th>
@@ -94,7 +62,7 @@
             <tbody id="tableBody"></tbody>
         </table>
     </div>
-    <button class="btn-export" onclick="exportToExcel()">💾 ดาวน์โหลดไฟล์ Excel</button>
+    <button class="btn btn-primary btn-block" style="padding: 16px; font-size: 16px;" onclick="exportToExcel()">💾 ดาวน์โหลดไฟล์ Excel</button>
 </div>
 <div id="save-status">✅ บันทึกอัตโนมัติเรียบร้อย</div>
 
@@ -119,9 +87,7 @@
 
         try {
             const unlockSnap = await db.collection('Settings').doc('UnlockConfig').get();
-            if (unlockSnap.exists && unlockSnap.data().classes) {
-                isClassUnlocked = unlockSnap.data().classes.includes(className);
-            }
+            if (unlockSnap.exists && unlockSnap.data().classes) isClassUnlocked = unlockSnap.data().classes.includes(className);
             const snapshot = await db.collection('Students').get();
             snapshot.forEach(doc => { let data = doc.data(); data.docId = doc.id; allStudents.push(data); });
             filterStudents();
@@ -163,15 +129,13 @@
         if (isClassUnlocked) {
             isReadOnly = false;
             banner.style.display = "block";
-            banner.style.backgroundColor = "#E8F5E9"; banner.style.color = "#2E7D32"; banner.style.borderColor = "#81C784";
-            banner.innerText = "🟢 แอดมินปลดล็อกให้ห้องนี้สามารถแก้ไขข้อมูลย้อนหลังได้";
+            banner.className = "alert alert-success";
+            banner.innerText = "🟢 แอดมินปลดล็อกให้สามารถแก้ไขข้อมูลย้อนหลังได้";
         } else if (isReadOnly) {
             banner.style.display = "block";
-            banner.style.backgroundColor = "#FFF3E0"; banner.style.color = "#E65100"; banner.style.borderColor = "#FFB74D";
+            banner.className = "alert alert-warning";
             banner.innerText = "⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไข แจ้งแอดมินเพื่อปลดล็อก)";
-        } else {
-            banner.style.display = "none";
-        }
+        } else { banner.style.display = "none"; }
         
         if (currentStudents.length === 0) {
             tbody.innerHTML = "<tr><td colspan='10' style='padding:20px; color:red;'>ไม่มีข้อมูลนักเรียนในเทอม/ปีที่เลือก</td></tr>"; return;
@@ -200,7 +164,7 @@
                     <td><input type="number" class="input-hw" id="w_${stuId}" value="${savedW}" step="0.1" ${disabledAttr} onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
                     <td><input type="number" class="input-hw" id="h_${stuId}" value="${savedH}" step="0.1" ${disabledAttr} onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
                     <td><input type="number" class="input-hw" id="hc_${stuId}" value="${savedHC}" step="0.1" ${disabledAttr} onchange="autoSaveHealth('${stuId}', '${student['เพศ']}')"></td>
-                    <td><span class="badge status-empty" id="badge_wh_${stuId}">รอข้อมูล</span></td><td><span class="badge status-empty" id="badge_ha_${stuId}">รอข้อมูล</span></td>
+                    <td><span class="badge badge-empty" id="badge_wh_${stuId}">รอข้อมูล</span></td><td><span class="badge badge-empty" id="badge_ha_${stuId}">รอข้อมูล</span></td>
                 `;
                 tbody.appendChild(tr);
                 if(savedW && savedH) updateNutritionUI(stuId, student['เพศ'], parseFloat(savedW), parseFloat(savedH));
@@ -214,7 +178,6 @@
         let wVal = document.getElementById(`w_${studentId}`).value;
         let hVal = document.getElementById(`h_${studentId}`).value;
         let hcVal = document.getElementById(`hc_${studentId}`).value;
-        
         const w = wVal !== "" ? parseFloat(wVal) : "";
         const h = hVal !== "" ? parseFloat(hVal) : "";
         const hc = hcVal !== "" ? parseFloat(hcVal) : "";
@@ -223,16 +186,20 @@
 
         try {
             await db.collection('HealthRecords').doc(`${studentId}_${month}_${year}`).set({ studentId: studentId, month: month, year: year, weight: w, height: h, headCircum: hc, className: className }, { merge: true });
-            const status = document.getElementById('save-status');
-            status.style.opacity = "1"; setTimeout(() => { status.style.opacity = "0"; }, 1500);
+            showToast("✅ บันทึกอัตโนมัติเรียบร้อย");
         } catch (error) { console.error(error); }
+    }
+
+    function showToast(msg) {
+        const t = document.getElementById('save-status'); t.innerText = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
     }
 
     function updateNutritionUI(stuId, gender, w, h) {
         let bmi = w / ((h/100) * (h/100));
-        let whResult = "สมส่วน"; let whClass = "status-normal"; let haResult = "สูงตามเกณฑ์"; let haClass = "status-normal";
-        if (bmi < 15) { whResult = "ผอม"; whClass = "status-danger"; } else if (bmi < 16.5) { whResult = "ค่อนข้างผอม"; whClass = "status-warning"; } else if (bmi > 23) { whResult = "อ้วน"; whClass = "status-danger"; } else if (bmi > 20) { whResult = "เริ่มอ้วน"; whClass = "status-warning"; }
-        if (h < 120) { haResult = "เตี้ย"; haClass = "status-danger"; } else if (h > 155) { haResult = "สูง"; haClass = "status-normal"; }
+        let whResult = "สมส่วน"; let whClass = "badge-normal"; let haResult = "สูงตามเกณฑ์"; let haClass = "badge-normal";
+        if (bmi < 15) { whResult = "ผอม"; whClass = "badge-danger"; } else if (bmi < 16.5) { whResult = "ค่อนข้างผอม"; whClass = "badge-warning"; } else if (bmi > 23) { whResult = "อ้วน"; whClass = "badge-danger"; } else if (bmi > 20) { whResult = "เริ่มอ้วน"; whClass = "badge-warning"; }
+        if (h < 120) { haResult = "เตี้ย"; haClass = "badge-danger"; } else if (h > 155) { haResult = "สูง"; haClass = "badge-normal"; }
         document.getElementById(`badge_wh_${stuId}`).className = `badge ${whClass}`; document.getElementById(`badge_wh_${stuId}`).innerText = whResult;
         document.getElementById(`badge_ha_${stuId}`).className = `badge ${haClass}`; document.getElementById(`badge_ha_${stuId}`).innerText = haResult;
     }
@@ -267,7 +234,6 @@
             
             let row = [index + 1, student['ชื่อ-สกุล'] || student['ชื่อ - สกุล'] || "", student['เพศ'] || "", age.y, age.m, w, h, hc];
             let whResult = document.getElementById(`badge_wh_${student.docId}`).innerText; let haResult = document.getElementById(`badge_ha_${student.docId}`).innerText;
-            
             ["ผอม", "ค่อนข้างผอม", "สมส่วน", "ท้วม", "เริ่มอ้วน", "อ้วน"].forEach(opt => row.push(whResult === opt ? "/" : ""));
             ["เตี้ย", "ค่อนข้างเตี้ย", "สูงตามเกณฑ์", "ค่อนข้างสูง", "สูง"].forEach(opt => row.push(haResult === opt ? "/" : ""));
             exportData.push(row);

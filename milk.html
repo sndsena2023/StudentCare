@@ -5,45 +5,19 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
     <title>บันทึกการดื่มนม</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Sarabun:wght@300;400;600;700&display=swap" rel="stylesheet">
-    <style>
-        :root { --primary-purple: #6A1B9A; --primary-green: #2E7D32; --border-color: #EEEEEE; }
-        body { font-family: 'Sarabun', sans-serif; background: linear-gradient(135deg, #F3E5F5 0%, #E8F5E9 100%); padding: 15px; margin: 0; min-height: 100vh;}
-        .container { max-width: 900px; margin: auto; background: rgba(255, 255, 255, 0.98); padding: 25px; border-radius: 20px; box-shadow: 0 10px 30px rgba(106, 27, 154, 0.08); }
-        .header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 15px;}
-        .header h2 { margin: 0; color: var(--primary-purple); font-weight: 700; font-size: 22px;}
-        .settings-card { background: #FAFAFA; border: 1px solid var(--border-color); padding: 15px; border-radius: 16px; margin-bottom: 20px; display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 15px; align-items: center; }
-        .form-group label { display: block; font-size: 14px; font-weight: 600; margin-bottom: 5px; color: #555;}
-        input[type="date"], select { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 10px; font-family: 'Sarabun', sans-serif; box-sizing: border-box; outline: none; transition: 0.3s;}
-        input:focus, select:focus { border-color: var(--primary-purple); }
-        button { font-family: 'Sarabun', sans-serif; border: none; padding: 12px 20px; border-radius: 12px; font-size: 15px; font-weight: 600; cursor: pointer; transition: 0.3s; }
-        .btn-back { background: #ECEFF1; color: #546E7A; } .btn-back:hover { background: #CFD8DC; }
-        .table-wrapper { overflow-x: auto; border: 1px solid var(--border-color); border-radius: 16px; background: white; margin-bottom: 20px;}
-        table { border-collapse: separate; border-spacing: 0; width: 100%; }
-        th, td { padding: 12px 5px; text-align: center; font-size: 14px; border-bottom: 1px solid var(--border-color); border-right: 1px solid var(--border-color); }
-        th { background-color: var(--primary-purple); color: white; }
-        td:nth-child(2) { text-align: left; padding-left: 15px; }
-        input[type="checkbox"] { width: 22px; height: 22px; cursor: pointer; accent-color: var(--primary-green); }
-        .holiday-alert { background: #FFEBEE; color: #C62828; padding: 20px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #EF9A9A; text-align: center; display: none; margin-bottom: 20px;}
-        .readonly-banner { background: #FFF3E0; color: #E65100; padding: 15px; border-radius: 12px; font-size: 16px; font-weight: bold; border: 2px dashed #FFB74D; text-align: center; margin-bottom: 20px; display: none; }
-        .btn-export { background: var(--primary-green); color: white; width: 100%; padding: 16px; font-size: 18px; margin-top: 10px;}
-        #save-status { position: fixed; bottom: 20px; right: 20px; background: #333; color: white; padding: 10px 20px; border-radius: 20px; font-size: 14px; opacity: 0; transition: 0.3s; pointer-events: none; z-index: 999;}
-    </style>
+    <link rel="stylesheet" href="style.css">
 </head>
 <body>
 <div class="container">
-    <div class="header">
-        <h2>🥛 บันทึกดื่มนม ชั้น <span id="displayClass" style="color:var(--primary-green);"></span></h2>
-        <button class="btn-back" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 10px;">
+        <h2 class="header-title" style="margin: 0;">🥛 บันทึกดื่มนม <span style="color: var(--secondary); margin-left:8px;" id="displayClass"></span></h2>
+        <button class="btn btn-outline" onclick="window.location.href='index.html'">← กลับหน้าหลัก</button>
     </div>
     
-    <div class="settings-card">
+    <div class="card grid-3">
+        <div class="form-group"><label>ภาคเรียนที่</label><select id="termInput" onchange="filterStudents()"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select></div>
         <div class="form-group">
-            <label style="color:var(--primary-purple);">ภาคเรียนที่</label>
-            <select id="termInput" onchange="filterStudents()"><option value="1">1</option><option value="2">2</option><option value="3">3</option></select>
-        </div>
-        <div class="form-group">
-            <label style="color:var(--primary-purple);">ปีการศึกษา (พ.ศ.)</label>
+            <label>ปีการศึกษา (พ.ศ.)</label>
             <select id="yearInput" onchange="filterStudents()">
                 <option value="2569" selected>2569</option><option value="2570">2570</option>
                 <option value="2571">2571</option><option value="2572">2572</option>
@@ -53,23 +27,22 @@
         <div class="form-group"><label>เลือกวันที่บันทึก</label><input type="date" id="recordDate" onchange="filterStudents()"></div>
     </div>
 
-    <!-- ป้ายแจ้งสถานะการล็อก/ปลดล็อก -->
-    <div id="readOnlyBanner" class="readonly-banner">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล แจ้งแอดมินเพื่อปลดล็อก)</div>
-    <div id="holidayAlert" class="holiday-alert">⛔ วันนี้เป็นวันหยุด: <span id="holidayName"></span></div>
+    <div id="readOnlyBanner" class="alert alert-warning">⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไขข้อมูล แจ้งแอดมินเพื่อปลดล็อก)</div>
+    <div id="holidayAlert" class="alert alert-danger">⛔ วันนี้เป็นวันหยุด: <span id="holidayName"></span></div>
 
     <div class="table-wrapper" id="tableContainer">
         <table id="milkTable">
             <thead>
                 <tr>
-                    <th style="width: 50px; border-top-left-radius: 12px;">ที่</th>
-                    <th>ชื่อ - สกุล</th>
-                    <th style="width: 100px; border-top-right-radius: 12px;">ดื่มนม ✔️</th>
+                    <th style="width: 50px; min-width: 50px; max-width: 50px;">ที่</th>
+                    <th style="min-width: 160px;">ชื่อ - สกุล</th>
+                    <th style="width: 100px; min-width: 100px; max-width: 100px;">ดื่มนม ✔️</th>
                 </tr>
             </thead>
             <tbody id="tableBody"></tbody>
         </table>
     </div>
-    <button class="btn-export" onclick="exportMonthlyToExcel()">💾 ดาวน์โหลดไฟล์ Excel (สรุปทั้งเดือน)</button>
+    <button class="btn btn-success btn-block" style="padding: 16px; font-size: 16px;" onclick="exportMonthlyToExcel()">💾 ดาวน์โหลดไฟล์ Excel (สรุปทั้งเดือน)</button>
 </div>
 <div id="save-status">✅ บันทึกอัตโนมัติเรียบร้อย</div>
 
@@ -78,7 +51,7 @@
 <script src="firebase.js"></script>
 <script>
     let allStudents = []; let currentStudents = []; let currentHolidays = {};
-    let isClassUnlocked = false; // ตัวแปรเก็บสถานะการปลดล็อกของห้องนี้
+    let isClassUnlocked = false; 
     const className = sessionStorage.getItem("currentClass");
     const activeTerm = sessionStorage.getItem('activeTerm') || "1";
     const activeYear = sessionStorage.getItem('activeYear') || "2569";
@@ -93,11 +66,8 @@
         document.getElementById('recordDate').value = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
 
         try {
-            // โหลดสิทธิ์การปลดล็อก
             const unlockSnap = await db.collection('Settings').doc('UnlockConfig').get();
-            if (unlockSnap.exists && unlockSnap.data().classes) {
-                isClassUnlocked = unlockSnap.data().classes.includes(className);
-            }
+            if (unlockSnap.exists && unlockSnap.data().classes) isClassUnlocked = unlockSnap.data().classes.includes(className);
 
             const holSnapshot = await db.collection('Holidays').get();
             holSnapshot.forEach(doc => { currentHolidays[doc.id] = doc.data().name; });
@@ -111,7 +81,6 @@
     function filterStudents() {
         const selectedTerm = document.getElementById('termInput').value;
         const selectedYear = document.getElementById('yearInput').value;
-        
         let classKey = Object.keys(allStudents[0] || {}).find(k => k.includes("ชั้น") || k.includes("ห้อง")) || "ชั้นเรียน";
         currentStudents = allStudents.filter(std => {
             let classMatch = (std[classKey] === className);
@@ -133,27 +102,21 @@
         const banner = document.getElementById('readOnlyBanner');
 
         if(!dateVal) return;
-
-        // เช็คว่าวันย้อนหลังหรือไม่
-        const today = new Date();
-        const todayStr = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+        const todayStr = new Date().toISOString().split('T')[0];
         const isPastDate = (dateVal < todayStr);
 
         let isReadOnly = (selectedTerm !== activeTerm || selectedYear !== activeYear || isPastDate);
 
-        // นำสิทธิ์แอดมินมาหักล้าง
         if (isClassUnlocked) {
             isReadOnly = false;
             banner.style.display = "block";
-            banner.style.backgroundColor = "#E8F5E9"; banner.style.color = "#2E7D32"; banner.style.borderColor = "#81C784";
+            banner.className = "alert alert-success";
             banner.innerText = "🟢 แอดมินปลดล็อกให้ห้องนี้สามารถแก้ไขข้อมูลย้อนหลังได้";
         } else if (isReadOnly) {
             banner.style.display = "block";
-            banner.style.backgroundColor = "#FFF3E0"; banner.style.color = "#E65100"; banner.style.borderColor = "#FFB74D";
+            banner.className = "alert alert-warning";
             banner.innerText = "⚠️ โหมดดูข้อมูลย้อนหลัง (ไม่อนุญาตให้แก้ไข แจ้งแอดมินเพื่อปลดล็อก)";
-        } else {
-            banner.style.display = "none";
-        }
+        } else { banner.style.display = "none"; }
 
         const dayOfWeek = new Date(dateVal).getDay();
         let isHoliday = false; let holidayText = "";
@@ -195,9 +158,13 @@
         const isChecked = document.getElementById(`cb_${studentId}`).checked;
         try {
             await db.collection('MilkRecords').doc(`${studentId}_${dateVal}`).set({ studentId: studentId, date: dateVal, status: isChecked, className: className }, { merge: true });
-            const status = document.getElementById('save-status');
-            status.style.opacity = "1"; setTimeout(() => { status.style.opacity = "0"; }, 1500);
+            showToast("✅ บันทึกอัตโนมัติเรียบร้อย");
         } catch (error) { console.error(error); }
+    }
+    
+    function showToast(msg) {
+        const t = document.getElementById('save-status'); t.innerText = msg; t.classList.add('show');
+        setTimeout(() => t.classList.remove('show'), 2000);
     }
 
     async function exportMonthlyToExcel() {

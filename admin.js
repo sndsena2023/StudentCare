@@ -6,7 +6,6 @@ window.onload = async () => {
             document.getElementById('sysYear').value = doc.data().year;
         }
 
-        // โหลดรายชื่อห้องเพื่อใส่ใน Dropdown ปลดล็อก
         const snapshot = await db.collection('Students').get();
         let classes = new Set();
         snapshot.forEach(d => {
@@ -16,10 +15,7 @@ window.onload = async () => {
         });
         const classSelect = document.getElementById('unlockClassSelect');
         classSelect.innerHTML = '<option value="">-- เลือกห้องเรียน --</option>';
-        Array.from(classes).sort().forEach(c => {
-            classSelect.innerHTML += `<option value="${c}">${c}</option>`;
-        });
-
+        Array.from(classes).sort().forEach(c => { classSelect.innerHTML += `<option value="${c}">${c}</option>`; });
         loadUnlockedClasses();
     } catch(e) {}
 };
@@ -30,21 +26,20 @@ async function saveSystemSettings() {
     const statusEl = document.getElementById('status-sys');
     try {
         await db.collection('Settings').doc('ActiveConfig').set({ term: term, year: year });
-        statusEl.style.color = "green"; statusEl.innerText = "✅ บันทึกการตั้งค่าระบบเรียบร้อย";
-    } catch(e) { statusEl.style.color = "red"; statusEl.innerText = "❌ ผิดพลาด: " + e.message; }
+        statusEl.style.color = "var(--secondary)"; statusEl.innerText = "✅ บันทึกตั้งค่าระบบเรียบร้อย";
+    } catch(e) { statusEl.style.color = "var(--danger)"; statusEl.innerText = "❌ ผิดพลาด: " + e.message; }
 }
 
-// ฟังก์ชันควบคุมการปลดล็อก
 async function loadUnlockedClasses() {
     const doc = await db.collection('Settings').doc('UnlockConfig').get();
     let unlocked = [];
     if(doc.exists && doc.data().classes) unlocked = doc.data().classes;
-    document.getElementById('unlockedList').innerText = unlocked.length ? unlocked.join(', ') : "ไม่มี (ล็อกตามปกติทุกห้อง)";
+    document.getElementById('unlockedList').innerText = unlocked.length ? unlocked.join(', ') : "ไม่มี (ล็อกตามปกติ)";
 }
 
 async function toggleUnlock(isUnlock) {
     const cls = document.getElementById('unlockClassSelect').value;
-    if(!cls) return alert("❌ กรุณาเลือกห้องเรียนก่อน");
+    if(!cls) return alert("❌ กรุณาเลือกห้องเรียน");
     try {
         const docRef = db.collection('Settings').doc('UnlockConfig');
         const docSnap = await docRef.get();
@@ -56,7 +51,7 @@ async function toggleUnlock(isUnlock) {
         
         await docRef.set({ classes: unlocked });
         loadUnlockedClasses();
-        alert(isUnlock ? `✅ ปลดล็อกห้อง ${cls} ให้แก้ข้อมูลย้อนหลังได้แล้ว!` : `🔒 ล็อกห้อง ${cls} กลับเป็นปกติแล้ว!`);
+        alert(isUnlock ? `✅ ปลดล็อกห้อง ${cls} แล้ว!` : `🔒 ล็อกห้อง ${cls} แล้ว!`);
     } catch(e) { alert("❌ ผิดพลาด: " + e.message); }
 }
 
@@ -81,39 +76,98 @@ async function importData(type) {
     const collectionName = type === 'teacher' ? 'Teachers' : 'Students';
     const rawText = document.getElementById(textAreaId).value;
     const statusEl = document.getElementById(statusId);
-    
     const term = document.getElementById('sysTerm').value.trim();
     const year = document.getElementById('sysYear').value.trim();
 
-    if (!term || !year) { alert("❌ กรุณากดบันทึกตั้งค่าระบบก่อนนำเข้าข้อมูล"); return; }
-    if (!rawText.trim()) { statusEl.style.color = "red"; statusEl.innerText = "❌ กรุณาวางข้อมูลก่อนกดบันทึก"; return; }
+    if (!term || !year) { alert("❌ กรุณาบันทึกตั้งค่าระบบก่อน"); return; }
+    if (!rawText.trim()) { statusEl.style.color = "var(--danger)"; statusEl.innerText = "❌ กรุณาวางข้อมูลก่อน"; return; }
 
     try {
-        statusEl.style.color = "blue"; statusEl.innerText = "⏳ กำลังอัปโหลดขึ้นฐานข้อมูล...";
+        statusEl.style.color = "var(--primary)"; statusEl.innerText = "⏳ กำลังตรวจสอบและนำเข้า...";
         const parsedData = parseExcelPastedData(rawText);
+        
+        // โหลด ID เดิมมาตรวจสอบ เพื่ออัปเดต (Upsert Logic)
+        const existSnap = await db.collection(collectionName).get();
+        const existingIds = new Set();
+        existSnap.forEach(doc => existingIds.add(doc.id));
+
         const batch = db.batch();
+        let added = 0, updated = 0;
+
         parsedData.forEach((data) => {
             data.term = term; data.academicYear = year;
-            if (type === 'teacher') data.password = "0000"; 
-            const docRef = db.collection(collectionName).doc(); 
-            batch.set(docRef, data);
+            let idKey = Object.keys(data).find(k => k.includes("รหัส"));
+            let docId = idKey && data[idKey] ? String(data[idKey]).trim().toUpperCase() : db.collection(collectionName).doc().id;
+            let docRef = db.collection(collectionName).doc(docId);
+            
+            if (existingIds.has(docId)) {
+                updated++;
+                batch.set(docRef, data, { merge: true }); // เขียนทับส่วนที่เพิ่มมา ไม่ลบของเดิม
+            } else {
+                added++;
+                if (type === 'teacher') data.password = "0000"; 
+                batch.set(docRef, data);
+            }
         });
         await batch.commit();
-        statusEl.style.color = "green"; statusEl.innerText = `✅ สำเร็จ! นำเข้าข้อมูล ${parsedData.length} รายการ (เทอม ${term}/${year})`;
+        statusEl.style.color = "var(--secondary)"; statusEl.innerText = `✅ สำเร็จ! เพิ่มใหม่ ${added} รายการ, อัปเดตข้อมูลเดิม ${updated} รายการ`;
         document.getElementById(textAreaId).value = "";
-    } catch (error) { statusEl.style.color = "red"; statusEl.innerText = `❌ ข้อผิดพลาด: ${error.message}`; }
+    } catch (error) { statusEl.style.color = "var(--danger)"; statusEl.innerText = `❌ ข้อผิดพลาด: ${error.message}`; }
 }
 
 async function saveHoliday() {
     const dateVal = document.getElementById('holidayDate').value;
     const nameVal = document.getElementById('holidayName').value.trim();
     const statusEl = document.getElementById('status-holiday');
-    
-    if (!dateVal || !nameVal) { statusEl.style.color = "red"; statusEl.innerText = "❌ กรุณาเลือกวันที่และตั้งชื่อวันหยุด"; return; }
+    if (!dateVal || !nameVal) { statusEl.style.color = "var(--danger)"; statusEl.innerText = "❌ เลือกวันที่และตั้งชื่อ"; return; }
     try {
-        statusEl.style.color = "blue"; statusEl.innerText = "⏳ กำลังบันทึกวันหยุด...";
+        statusEl.style.color = "var(--primary)"; statusEl.innerText = "⏳ กำลังบันทึก...";
         await db.collection('Holidays').doc(dateVal).set({ date: dateVal, name: nameVal });
-        statusEl.style.color = "green"; statusEl.innerText = `✅ บันทึกวันหยุดเรียบร้อย!`;
+        statusEl.style.color = "var(--secondary)"; statusEl.innerText = `✅ บันทึกวันหยุดเรียบร้อย!`;
         document.getElementById('holidayName').value = "";
-    } catch (error) { statusEl.style.color = "red"; statusEl.innerText = `❌ ข้อผิดพลาด: ${error.message}`; }
+    } catch (error) { statusEl.style.color = "var(--danger)"; statusEl.innerText = `❌ ข้อผิดพลาด: ${error.message}`; }
+}
+
+// ระบบล้างข้อมูลเก่า
+async function clearYearData() {
+    const targetYear = prompt("⚠️ โปรดระวัง! ฟังก์ชันนี้จะลบข้อมูลนักเรียน, การดื่มนม และสุขภาพ ของปีการศึกษาที่ระบุทิ้งทั้งหมด (ไม่สามารถกู้คืนได้)\n\nกรุณาพิมพ์ 'ปีการศึกษา' ที่ต้องการล้างข้อมูล (เช่น 2568):");
+    if (!targetYear) return;
+    
+    if (confirm(`ยืนยันการลบข้อมูลทั้งหมดของปีการศึกษา ${targetYear} ใช่หรือไม่?`)) {
+        const statusEl = document.getElementById('status-clear');
+        statusEl.style.display = "block";
+        statusEl.style.color = "var(--primary)"; 
+        statusEl.innerText = "⏳ กำลังล้างข้อมูล กรุณารอสักครู่...";
+        
+        try {
+            let totalDeleted = 0;
+            const collections = ['Students', 'HealthRecords', 'MilkRecords'];
+            
+            for (let col of collections) {
+                const snapshot = await db.collection(col).where('academicYear', '==', targetYear).get();
+                let batches = [];
+                let currentBatch = db.batch();
+                let count = 0;
+                
+                snapshot.forEach(doc => {
+                    currentBatch.delete(doc.ref);
+                    count++;
+                    totalDeleted++;
+                    if (count === 490) { // Firebase Batch limit is 500
+                        batches.push(currentBatch.commit());
+                        currentBatch = db.batch();
+                        count = 0;
+                    }
+                });
+                if (count > 0) batches.push(currentBatch.commit());
+                await Promise.all(batches);
+            }
+            
+            statusEl.className = "alert alert-success";
+            statusEl.innerText = `✅ ล้างข้อมูลปี ${targetYear} สำเร็จ (ลบไปทั้งหมด ${totalDeleted} รายการ)`;
+        } catch(e) {
+            statusEl.className = "alert alert-danger";
+            statusEl.innerText = `❌ เกิดข้อผิดพลาด: ${e.message}`;
+        }
+    }
 }
